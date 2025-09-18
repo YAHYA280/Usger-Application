@@ -1,0 +1,35 @@
+include:
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'expo/verify.yml'
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'validate-front-changes.yml'
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'default-variables.yml'
+
+stages:
+  - validate-changes
+  - verify
+
+
+# Validate changes job
+validate-changes:
+  extends: .validate_changes_template  # Assuming this template exists in the `validate-front-changes.yml`
+  only:
+    refs:
+      - merge_requests
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"
+
+# Verify job
+verify:
+  extends: .verify_template  # Assuming this template exists in the `expo/verify.yml`
+  only:
+    refs:
+      - merge_requests
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"
+
+
