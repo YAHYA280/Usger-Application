@@ -1,10 +1,10 @@
 export type NotificationPriority = "urgent" | "important" | "informative";
 export type NotificationStatus = "unread" | "read" | "pinned";
 export type NotificationActionType =
-  | "accept"
-  | "refuse"
-  | "report"
-  | "view_planning";
+  | "view_details"
+  | "contact_school"
+  | "mark_justified"
+  | "view_student";
 
 export interface NotificationAction {
   id: string;
@@ -22,10 +22,12 @@ export interface Notification {
   status: NotificationStatus;
   timestamp: Date;
   context?: {
-    vehicleId?: string;
-    routeId?: string;
-    planningId?: string;
+    studentId?: string;
+    studentName?: string;
+    className?: string;
+    subject?: string;
     location?: string;
+    date?: string;
   };
   actions?: NotificationAction[];
   isPinned: boolean;

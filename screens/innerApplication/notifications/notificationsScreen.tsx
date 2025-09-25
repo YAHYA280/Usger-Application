@@ -111,8 +111,6 @@ export const NotificationsScreen: React.FC = () => {
     getFilteredNotifications,
     getUnreadCount,
     getNotificationCounts,
-    clearError,
-    applyFilters,
   } = useNotificationStore();
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");

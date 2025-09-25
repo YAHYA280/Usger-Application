@@ -1,4 +1,3 @@
-// screens/innerApplication/notifications/components/NotificationItemMenu.tsx
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -45,15 +44,13 @@ export const NotificationItemMenu: React.FC<NotificationItemMenuProps> = ({
 
   if (!notification || !visible) return null;
 
-  // Calculate menu position while ensuring it stays on screen
   const rawLeft = position.x - MENU_WIDTH / 2;
   const clampedLeft = Math.min(
     Math.max(rawLeft, SCREEN_MARGIN),
     SCREEN_WIDTH - MENU_WIDTH - SCREEN_MARGIN
   );
 
-  // Ensure menu doesn't go below screen
-  const maxTop = SCREEN_HEIGHT - 250; // Approximate menu height
+  const maxTop = SCREEN_HEIGHT - 250;
   const clampedTop = Math.min(position.y, maxTop);
 
   const handleToggleRead = () => {

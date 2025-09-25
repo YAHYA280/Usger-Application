@@ -476,31 +476,32 @@ export const NotificationSettingsScreen: React.FC = () => {
             showChevron
           />
         </SettingSection>
+
+        <View style={styles.footer}>
+          <View style={styles.footerButtons}>
+            <Button
+              title="Réinitialiser"
+              variant="outline"
+              onPress={handleResetToDefaults}
+              style={{ flex: 1 }}
+            />
+
+            <Button
+              title="Sauvegarder"
+              variant="primary"
+              onPress={handleSavePreferences}
+              disabled={!hasChanges}
+              style={{ flex: 2 }}
+            />
+          </View>
+
+          <Text style={styles.infoText}>
+            Les modifications seront appliquées immédiatement après sauvegarde
+          </Text>
+        </View>
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
-        <View style={styles.footerButtons}>
-          <Button
-            title="Réinitialiser"
-            variant="outline"
-            onPress={handleResetToDefaults}
-            style={{ flex: 1 }}
-          />
-
-          <Button
-            title="Sauvegarder"
-            variant="primary"
-            onPress={handleSavePreferences}
-            disabled={!hasChanges}
-            style={{ flex: 2 }}
-          />
-        </View>
-
-        <Text style={styles.infoText}>
-          Les modifications seront appliquées immédiatement après sauvegarde
-        </Text>
-      </View>
     </SafeAreaView>
   );
 };

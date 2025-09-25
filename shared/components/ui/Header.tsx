@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { useThemeColors } from "../../../hooks/useTheme";
+import ConditionalComponent from "../conditionalComponent/conditionalComponent";
 
 type IconType = keyof typeof FontAwesome.glyphMap;
 
@@ -35,6 +36,8 @@ interface HeaderProps {
   style?: ViewStyle;
 
   onTitlePress?: () => void;
+
+  variant?: "default" | "home";
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -48,6 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
   subtitleColor,
   style,
   onTitlePress,
+  variant = "default",
 }) => {
   const colors = useThemeColors();
 
@@ -64,13 +68,17 @@ export const Header: React.FC<HeaderProps> = ({
           size={iconButton.size || 24}
           color={iconButton.color || colors.icon}
         />
-        {iconButton.badge && iconButton.badge > 0 && (
+        <ConditionalComponent
+          isValid={!!(iconButton.badge && iconButton.badge > 0)}
+        >
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
-              {iconButton.badge > 99 ? "99+" : iconButton.badge}
+              {(iconButton.badge || 0) > 99
+                ? "99+"
+                : (iconButton.badge || 0).toString()}
             </Text>
           </View>
-        )}
+        </ConditionalComponent>
       </View>
     </TouchableOpacity>
   );
@@ -80,9 +88,12 @@ export const Header: React.FC<HeaderProps> = ({
 
     const TitleWrapper = onTitlePress ? TouchableOpacity : View;
 
+    const titleContainerStyle =
+      variant === "home" ? styles.titleContainerHome : styles.titleContainer;
+
     return (
       <TitleWrapper
-        style={styles.titleContainer}
+        style={titleContainerStyle}
         onPress={onTitlePress}
         activeOpacity={onTitlePress ? 0.7 : 1}
       >
@@ -93,9 +104,11 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {title}
           </Text>
-          {emoji && <Text style={styles.emoji}>{emoji}</Text>}
+          <ConditionalComponent isValid={!!emoji}>
+            <Text style={styles.emoji}>{emoji}</Text>
+          </ConditionalComponent>
         </View>
-        {subtitle && (
+        <ConditionalComponent isValid={!!subtitle}>
           <Text
             style={[
               styles.subtitle,
@@ -105,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {subtitle}
           </Text>
-        )}
+        </ConditionalComponent>
       </TitleWrapper>
     );
   };
@@ -156,6 +169,11 @@ export const Header: React.FC<HeaderProps> = ({
       flex: 1,
       alignItems: "flex-start",
       paddingHorizontal: 30,
+    },
+    titleContainerHome: {
+      flex: 1,
+      alignItems: "flex-start",
+      paddingRight: 30,
     },
     titleRow: {
       flexDirection: "row",
@@ -225,9 +243,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.leftSection}>
-        {leftIcon && renderIconButton(leftIcon, -1)}
-      </View>
+      <ConditionalComponent isValid={variant === "default"}>
+        <View style={styles.leftSection}>
+          <ConditionalComponent isValid={!!leftIcon}>
+            {leftIcon && renderIconButton(leftIcon, -1)}
+          </ConditionalComponent>
+        </View>
+      </ConditionalComponent>
 
       {renderTitle()}
 

@@ -1,8 +1,6 @@
-// shared/components/ui/NotificationDetailModal.tsx
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import {
-  Dimensions,
   Modal,
   Platform,
   ScrollView,
@@ -31,8 +29,6 @@ interface NotificationDetailModalProps {
   onDelete?: () => void;
   onAction?: (actionId: string) => void;
 }
-
-const { height: screenHeight } = Dimensions.get("window");
 
 export const NotificationDetailModal: React.FC<
   NotificationDetailModalProps
@@ -163,7 +159,7 @@ export const NotificationDetailModal: React.FC<
     },
     scrollContent: {
       padding: 16,
-      paddingBottom: 100, // Extra padding for footer
+      paddingBottom: 100,
     },
     prioritySection: {
       flexDirection: "row",
@@ -281,7 +277,7 @@ export const NotificationDetailModal: React.FC<
       gap: 12,
       ...Platform.select({
         ios: {
-          paddingBottom: 32, // Extra padding for iOS safe area
+          paddingBottom: 32,
         },
       }),
     },
@@ -413,42 +409,60 @@ export const NotificationDetailModal: React.FC<
               </View>
             </ConditionalComponent>
 
-            {/* Context Information */}
+            {/* Context Information - Updated for parent-focused app */}
             <ConditionalComponent isValid={!!notification.context}>
               <View style={styles.contextSection}>
-                <Text style={styles.sectionTitle}>Contexte</Text>
+                <Text style={styles.sectionTitle}>Informations</Text>
                 <View style={styles.contextGrid}>
                   <ConditionalComponent
-                    isValid={!!notification.context?.vehicleId}
+                    isValid={!!notification.context?.studentName}
                   >
                     <View style={styles.contextItem}>
                       <FontAwesome
-                        name="car"
+                        name="user"
                         size={16}
                         color={colors.textTertiary}
                         style={styles.contextIcon}
                       />
-                      <Text style={styles.contextText}>Véhicule concerné</Text>
+                      <Text style={styles.contextText}>
+                        {notification.context?.studentName}
+                      </Text>
                     </View>
                   </ConditionalComponent>
 
                   <ConditionalComponent
-                    isValid={!!notification.context?.routeId}
+                    isValid={!!notification.context?.className}
                   >
                     <View style={styles.contextItem}>
                       <FontAwesome
-                        name="road"
+                        name="graduation-cap"
                         size={16}
                         color={colors.textTertiary}
                         style={styles.contextIcon}
                       />
-                      <Text style={styles.contextText}>Trajet</Text>
+                      <Text style={styles.contextText}>
+                        {notification.context?.className}
+                      </Text>
                     </View>
                   </ConditionalComponent>
 
                   <ConditionalComponent
-                    isValid={!!notification.context?.planningId}
+                    isValid={!!notification.context?.subject}
                   >
+                    <View style={styles.contextItem}>
+                      <FontAwesome
+                        name="book"
+                        size={16}
+                        color={colors.textTertiary}
+                        style={styles.contextIcon}
+                      />
+                      <Text style={styles.contextText}>
+                        {notification.context?.subject}
+                      </Text>
+                    </View>
+                  </ConditionalComponent>
+
+                  <ConditionalComponent isValid={!!notification.context?.date}>
                     <View style={styles.contextItem}>
                       <FontAwesome
                         name="calendar"
@@ -456,7 +470,9 @@ export const NotificationDetailModal: React.FC<
                         color={colors.textTertiary}
                         style={styles.contextIcon}
                       />
-                      <Text style={styles.contextText}>Planning</Text>
+                      <Text style={styles.contextText}>
+                        {notification.context?.date}
+                      </Text>
                     </View>
                   </ConditionalComponent>
 
