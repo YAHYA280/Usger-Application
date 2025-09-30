@@ -42,6 +42,7 @@ export const HomeScreen: React.FC = () => {
       })
     );
 
+    //test
     setTimeout(() => {
       Animated.parallel(cardAnimationSequence).start();
     }, 300);
