@@ -182,9 +182,9 @@ const getStatusIcon = (status: string) => {
 const getStatusDescription = (status: string) => {
   switch (status) {
     case "Actif":
-      return "Disponible pour les trajets";
+      return "Compte actif et accessible";
     case "Inactif":
-      return "Non disponible";
+      return "Compte temporairement inactif";
     default:
       return "";
   }
@@ -215,7 +215,7 @@ export const StatusDropdownModal: React.FC<StatusDropdownModalProps> = ({
               <View style={styles.dropdownHeader}>
                 <Text style={styles.dropdownTitle}>Sélectionner le statut</Text>
                 <Text style={styles.dropdownSubtitle}>
-                  Choisissez votre statut de disponibilité
+                  Choisissez le statut de votre compte
                 </Text>
               </View>
 

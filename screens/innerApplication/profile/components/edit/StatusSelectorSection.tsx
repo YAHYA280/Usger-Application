@@ -112,9 +112,9 @@ const getStatusIcon = (status: string) => {
 const getStatusDescription = (status: string) => {
   switch (status) {
     case "Actif":
-      return "Disponible pour les trajets";
+      return "Compte actif et accessible";
     case "Inactif":
-      return "Non disponible";
+      return "Compte temporairement inactif";
     default:
       return "";
   }
@@ -129,7 +129,7 @@ export const StatusSelectorSection: React.FC<StatusSelectorSectionProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.statusLabel}>Statut de disponibilité</Text>
+      <Text style={styles.statusLabel}>Statut du compte</Text>
       <TouchableOpacity
         style={styles.statusButton}
         onPress={onPress}

@@ -151,12 +151,20 @@ const createMainStyles = (colors: any) =>
       textAlign: "center",
       marginBottom: 4,
     },
-    profileTitle: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: "center",
-      fontWeight: "400",
-      marginBottom: 5,
+    membershipBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.primary + "15",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      marginTop: 4,
+    },
+    membershipText: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: "600",
+      marginLeft: 6,
     },
     cardsContainer: {
       flex: 1,
@@ -265,11 +273,12 @@ export const ProfileScreen: React.FC = () => {
       label: "Notifications",
       onPress: () => router.push("/notifications?returnTo=/(tabs)/profile"),
     },
+
     {
-      id: "documents",
-      icon: "file-text" as const,
-      label: "Mes documents",
-      onPress: () => showComingSoonAlert("Mes documents"),
+      id: "Documents",
+      icon: "file" as const,
+      label: "Mes Document",
+      onPress: () => showComingSoonAlert("Favoris"),
     },
     {
       id: "history",
@@ -361,9 +370,6 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>
             {profile.personalInfo.fullName}
-          </Text>
-          <Text style={styles.profileTitle}>
-            {profile.professionalInfo.position}
           </Text>
         </View>
 

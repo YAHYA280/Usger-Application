@@ -160,18 +160,21 @@ export const ProfileInfoSection: React.FC<ProfileInfoSectionProps> = ({
       type: "email",
     },
     {
-      id: "driverId",
-      label: "Numéro du permis",
-      value: "836579376558449",
-      icon: "credit-card",
-      editable: false,
+      id: "dateOfBirth",
+      label: "Date de naissance",
+      value:
+        pendingChanges.dateOfBirth ||
+        personalInfo.dateOfBirth ||
+        "Non renseigné",
+      icon: "birthday-cake",
+      editable: true,
     },
     {
-      id: "yearsExperience",
-      label: "Années d'expériences",
-      value: "10",
-      icon: "calendar",
-      editable: false,
+      id: "address",
+      label: "Adresse",
+      value: pendingChanges.address || personalInfo.address || "Non renseignée",
+      icon: "map-marker",
+      editable: true,
     },
   ];
 
@@ -183,6 +186,16 @@ export const ProfileInfoSection: React.FC<ProfileInfoSectionProps> = ({
         return pendingChanges.phoneNumber || personalInfo.phoneNumber;
       if (item.id === "email")
         return pendingChanges.email || personalInfo.email;
+      if (item.id === "dateOfBirth")
+        return (
+          pendingChanges.dateOfBirth ||
+          personalInfo.dateOfBirth ||
+          "Non renseigné"
+        );
+      if (item.id === "address")
+        return (
+          pendingChanges.address || personalInfo.address || "Non renseignée"
+        );
       return item.value;
     };
 

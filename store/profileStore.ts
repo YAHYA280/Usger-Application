@@ -12,27 +12,23 @@ type ProfileStore = ProfileState & ProfileActions;
 // Mock data for profile
 const mockProfile: UserProfile = {
   personalInfo: {
-    id: "836579376558449",
-    fullName: "Martin Martin",
-    firstName: "Martin",
+    id: "USER836579376558449",
+    fullName: "Sophie Martin",
+    firstName: "Sophie",
     lastName: "Martin",
-    email: "sophie@gmail.com",
-    phoneNumber: "+1453244212224",
-    address: "10. Rue Jean Jacque. Quartier Francois...",
+    email: "sophie.martin@gmail.com",
+    phoneNumber: "+212 6 12 34 56 78",
+    address: "10 Rue Jean Jacques, Quartier François, Tanger",
     profilePhoto:
       "https://pub-c5e31b5cdafb419fb247a8ac2e78df7a.r2.dev/public/assets/images/mock/avatar/avatar-7.webp",
-    dateOfBirth: "15/03/1985",
+    dateOfBirth: "15/03/1990",
     nationality: "Marocaine",
   },
-  professionalInfo: {
-    driverId: "836579376558449",
-    driverLicense: "L123456789",
-    hireDate: "01/01/2020",
-    position: "10 ans",
+  userInfo: {
+    userId: "USER836579376558449",
+    joinDate: "15/01/2023",
     status: "Actif",
-    contractType: "CDI",
-    department: "Transport",
-    yearsOfExperience: 10,
+    totalBookings: 47,
   },
   accountSettings: {
     id: "1",
@@ -48,12 +44,12 @@ const mockProfile: UserProfile = {
       id: "1",
       modificationDate: "2025-01-10 14:30",
       modificationType: "personal",
-      modifiedBy: "  Martin",
+      modifiedBy: "Sophie Martin",
       changes: [
         {
           field: "phoneNumber",
-          oldValue: "+14532442223",
-          newValue: "+1453244212224",
+          oldValue: "+212 6 12 34 56 77",
+          newValue: "+212 6 12 34 56 78",
         },
       ],
     },
@@ -61,7 +57,7 @@ const mockProfile: UserProfile = {
       id: "2",
       modificationDate: "2025-01-05 09:15",
       modificationType: "settings",
-      modifiedBy: "Martin Martin",
+      modifiedBy: "Sophie Martin",
       changes: [
         {
           field: "emailNotifications",
@@ -74,17 +70,17 @@ const mockProfile: UserProfile = {
       id: "3",
       modificationDate: "2025-01-01 10:00",
       modificationType: "personal",
-      modifiedBy: "Martin Martin",
+      modifiedBy: "Sophie Martin",
       changes: [
         {
           field: "address",
           oldValue: "456 Avenue Hassan II, Rabat",
-          newValue: "10. Rue Jean Jacque. Quartier Francois...",
+          newValue: "10 Rue Jean Jacques, Quartier François, Tanger",
         },
         {
           field: "dateOfBirth",
           oldValue: "",
-          newValue: "15/03/1985",
+          newValue: "15/03/1990",
         },
       ],
     },

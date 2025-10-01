@@ -12,15 +12,11 @@ export interface PersonalInfo {
   nationality?: string;
 }
 
-export interface ProfessionalInfo {
-  driverId: string;
-  driverLicense: string;
-  hireDate: string;
-  position: string;
-  status: "Actif" | "En congé" | "Inactif";
-  contractType: string;
-  department: string;
-  yearsOfExperience: number;
+export interface UserInfo {
+  userId: string;
+  joinDate: string;
+  status: "Actif" | "Inactif";
+  totalBookings: number;
 }
 
 export interface AccountSettings {
@@ -36,7 +32,7 @@ export interface AccountSettings {
 export interface ProfileModificationHistory {
   id: string;
   modificationDate: string;
-  modificationType: "personal" | "professional" | "settings" | "password";
+  modificationType: "personal" | "user" | "settings" | "password";
   modifiedBy: string;
   changes: {
     field: string;
@@ -47,7 +43,7 @@ export interface ProfileModificationHistory {
 
 export interface UserProfile {
   personalInfo: PersonalInfo;
-  professionalInfo: ProfessionalInfo;
+  userInfo: UserInfo;
   accountSettings: AccountSettings;
   modificationHistory: ProfileModificationHistory[];
   lastUpdated: string;
@@ -76,16 +72,8 @@ export interface ProfileActions {
 }
 
 // EditProfileFormSection
-
 export interface FormField {
-  key:
-    | "fullName"
-    | "email"
-    | "phoneNumber"
-    | "driverId"
-    | "dateOfBirth"
-    | "address"
-    | "status";
+  key: "fullName" | "email" | "phoneNumber" | "dateOfBirth" | "address";
   label: string;
   value: string;
   placeholder: string;

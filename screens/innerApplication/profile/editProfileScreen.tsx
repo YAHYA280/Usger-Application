@@ -30,14 +30,7 @@ interface StatusOption {
 }
 
 interface FormField {
-  key:
-    | "fullName"
-    | "email"
-    | "phoneNumber"
-    | "driverId"
-    | "dateOfBirth"
-    | "address"
-    | "status";
+  key: "fullName" | "email" | "phoneNumber" | "dateOfBirth" | "address";
   label: string;
   value: string;
   placeholder: string;
@@ -175,20 +168,18 @@ export const EditProfileScreen: React.FC = () => {
     fullName: "",
     phoneNumber: "",
     email: "",
-    driverId: "",
-    status: "Actif" as "Actif" | "En congé" | "Inactif",
     dateOfBirth: "",
     address: "",
+    status: "Actif" as "Actif" | "Inactif",
   });
 
   const [errors, setErrors] = useState({
     fullName: "",
     phoneNumber: "",
     email: "",
-    driverId: "",
-    status: "",
     dateOfBirth: "",
     address: "",
+    status: "",
   });
 
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -199,10 +190,9 @@ export const EditProfileScreen: React.FC = () => {
         fullName: profile.personalInfo.fullName,
         phoneNumber: profile.personalInfo.phoneNumber,
         email: profile.personalInfo.email,
-        driverId: profile.professionalInfo.driverId,
-        status: profile.professionalInfo.status,
         dateOfBirth: profile.personalInfo.dateOfBirth || "",
         address: profile.personalInfo.address || "",
+        status: profile.userInfo.status,
       });
     }
 
@@ -230,7 +220,6 @@ export const EditProfileScreen: React.FC = () => {
       fullName: "",
       phoneNumber: "",
       email: "",
-      driverId: "",
       status: "",
       dateOfBirth: "",
       address: "",
@@ -250,10 +239,6 @@ export const EditProfileScreen: React.FC = () => {
       newErrors.email = "Format d'email invalide";
     }
 
-    if (!formData.driverId.trim()) {
-      newErrors.driverId = "Le numéro de permis est requis";
-    }
-
     if (!formData.address.trim()) {
       newErrors.address = "L'adresse est requise";
     }
@@ -270,6 +255,7 @@ export const EditProfileScreen: React.FC = () => {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
+        dateOfBirth: formData.dateOfBirth,
         address: formData.address,
       };
 
@@ -397,12 +383,12 @@ export const EditProfileScreen: React.FC = () => {
       editable: true,
     },
     {
-      key: "driverId",
-      label: "Numéro d'identification",
-      value: formData.driverId,
-      placeholder: "Saisissez votre numéro d'identification",
-      error: errors.driverId,
-      editable: false,
+      key: "dateOfBirth",
+      label: "Date de naissance",
+      value: formData.dateOfBirth,
+      placeholder: "JJ/MM/AAAA",
+      error: errors.dateOfBirth,
+      editable: true,
     },
     {
       key: "address",

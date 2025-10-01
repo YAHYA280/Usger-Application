@@ -117,11 +117,20 @@ const createStyles = (colors: any) =>
       marginBottom: 4,
       letterSpacing: 0.5,
     },
-    position: {
-      fontSize: 16,
-      color: "rgba(255, 255, 255, 0.9)",
-      textAlign: "center",
-      fontWeight: "500",
+    membershipBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      marginTop: 4,
+    },
+    membershipText: {
+      fontSize: 14,
+      color: "white",
+      fontWeight: "600",
+      marginLeft: 6,
     },
     statusContainer: {
       flexDirection: "row",
@@ -167,10 +176,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const styles = createStyles(colors);
 
   const getStatusColor = () => {
-    switch (profile.professionalInfo.status) {
+    switch (profile.userInfo.status) {
       case "Actif":
         return colors.success;
-
       case "Inactif":
         return colors.error;
       default:
@@ -235,18 +243,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
         <View style={styles.nameContainer}>
           <Text style={styles.fullName}>{profile.personalInfo.fullName}</Text>
-          <Text style={styles.position}>
-            {profile.professionalInfo.position}
-          </Text>
-        </View>
-
-        <View style={styles.statusContainer}>
-          <View
-            style={[styles.statusDot, { backgroundColor: getStatusColor() }]}
-          />
-          <Text style={styles.statusText}>
-            {profile.professionalInfo.status}
-          </Text>
         </View>
       </View>
     </View>

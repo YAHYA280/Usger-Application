@@ -159,13 +159,6 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      {/* User ID - First */}
-      <InfoItem
-        icon="id-badge"
-        label="Numéro d'identification"
-        value={profile.personalInfo.id}
-      />
-
       {/* Phone Number */}
       <InfoItem
         icon="phone"
@@ -184,8 +177,15 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
       <InfoItem
         icon="circle"
         label="Statut"
-        value={profile.professionalInfo.status}
+        value={profile.userInfo.status}
         isStatus={true}
+      />
+
+      {/* Join Date */}
+      <InfoItem
+        icon="calendar"
+        label="Membre depuis"
+        value={profile.userInfo.joinDate}
       />
 
       {/* Address - if available */}
