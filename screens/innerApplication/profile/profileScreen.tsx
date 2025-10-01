@@ -242,7 +242,7 @@ export const ProfileScreen: React.FC = () => {
   const showComingSoonAlert = (featureName: string) => {
     Alert.alert(
       "Bientôt disponible",
-      `La fonctionnalité "${featureName}" sera disponible prochainement. Yahya :D`,
+      `La fonctionnalité "${featureName}" sera disponible prochainement.`,
       [
         {
           text: "OK",
@@ -254,32 +254,28 @@ export const ProfileScreen: React.FC = () => {
 
   const navigationMenuItems = [
     {
+      id: "password",
+      icon: "key" as const,
+      label: "Changer le mot de passe",
+      onPress: () => router.push("/(tabs)/profile/change-password"),
+    },
+    {
+      id: "notifications",
+      icon: "bell" as const,
+      label: "Notifications",
+      onPress: () => router.push("/notifications?returnTo=/(tabs)/profile"),
+    },
+    {
       id: "documents",
       icon: "file-text" as const,
       label: "Mes documents",
-      subtitle: "Consultez vos documents",
       onPress: () => showComingSoonAlert("Mes documents"),
     },
     {
       id: "history",
       icon: "history" as const,
-      label: "Historique des trajets",
-      subtitle: "Voir l'historique complet",
-      onPress: () => showComingSoonAlert("Historique des trajets"),
-    },
-    {
-      id: "notifications",
-      icon: "bell" as const,
-      label: "Notifications et alertes",
-      subtitle: "Gérer les notifications",
-      onPress: () => router.push("/notifications?returnTo=/(tabs)/profile"),
-    },
-    {
-      id: "logout",
-      icon: "sign-out" as const,
-      label: "Déconnexion",
-      subtitle: "Se déconnecter du compte",
-      onPress: handleLogout,
+      label: "Historique",
+      onPress: () => showComingSoonAlert("Historique"),
     },
   ];
 
@@ -338,7 +334,6 @@ export const ProfileScreen: React.FC = () => {
       {/* Profile image positioned on the curved section */}
       <View style={styles.profileSection}>
         <View style={styles.profileImageContainer}>
-          {/* Removed TouchableOpacity - profile photo is no longer clickable */}
           <ConditionalComponent
             isValid={!!profile.personalInfo.profilePhoto}
             defaultComponent={
@@ -379,10 +374,7 @@ export const ProfileScreen: React.FC = () => {
         >
           <PersonalInfoCard profile={profile} />
 
-          <NavigationMenuCard
-            title="Actions rapides"
-            items={navigationMenuItems}
-          />
+          <NavigationMenuCard title="Menu" items={navigationMenuItems} />
         </ScrollView>
       </Animated.View>
     </View>

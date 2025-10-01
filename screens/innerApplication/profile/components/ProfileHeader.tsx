@@ -170,8 +170,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     switch (profile.professionalInfo.status) {
       case "Actif":
         return colors.success;
-      case "En congé":
-        return colors.warning;
+
       case "Inactif":
         return colors.error;
       default:

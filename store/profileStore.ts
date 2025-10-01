@@ -12,15 +12,15 @@ type ProfileStore = ProfileState & ProfileActions;
 // Mock data for profile
 const mockProfile: UserProfile = {
   personalInfo: {
-    id: "1",
-    fullName: "Jean Jacques Martin",
-    firstName: "Jean Jacques",
+    id: "836579376558449",
+    fullName: "Martin Martin",
+    firstName: "Martin",
     lastName: "Martin",
-    email: "chauffeur@gmail.com",
-    phoneNumber: "+14532442224",
-    address: "123 Rue de la Paix, Casablanca, Maroc",
+    email: "sophie@gmail.com",
+    phoneNumber: "+1453244212224",
+    address: "10. Rue Jean Jacque. Quartier Francois...",
     profilePhoto:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      "https://pub-c5e31b5cdafb419fb247a8ac2e78df7a.r2.dev/public/assets/images/mock/avatar/avatar-7.webp",
     dateOfBirth: "15/03/1985",
     nationality: "Marocaine",
   },
@@ -28,7 +28,7 @@ const mockProfile: UserProfile = {
     driverId: "836579376558449",
     driverLicense: "L123456789",
     hireDate: "01/01/2020",
-    position: "Chauffeur Interne",
+    position: "10 ans",
     status: "Actif",
     contractType: "CDI",
     department: "Transport",
@@ -48,12 +48,12 @@ const mockProfile: UserProfile = {
       id: "1",
       modificationDate: "2025-01-10 14:30",
       modificationType: "personal",
-      modifiedBy: "Jean Jacques Martin",
+      modifiedBy: "  Martin",
       changes: [
         {
           field: "phoneNumber",
           oldValue: "+14532442223",
-          newValue: "+14532442224",
+          newValue: "+1453244212224",
         },
       ],
     },
@@ -61,7 +61,7 @@ const mockProfile: UserProfile = {
       id: "2",
       modificationDate: "2025-01-05 09:15",
       modificationType: "settings",
-      modifiedBy: "Jean Jacques Martin",
+      modifiedBy: "Martin Martin",
       changes: [
         {
           field: "emailNotifications",
@@ -74,12 +74,12 @@ const mockProfile: UserProfile = {
       id: "3",
       modificationDate: "2025-01-01 10:00",
       modificationType: "personal",
-      modifiedBy: "Jean Jacques Martin",
+      modifiedBy: "Martin Martin",
       changes: [
         {
           field: "address",
           oldValue: "456 Avenue Hassan II, Rabat",
-          newValue: "123 Rue de la Paix, Casablanca, Maroc",
+          newValue: "10. Rue Jean Jacque. Quartier Francois...",
         },
         {
           field: "dateOfBirth",
@@ -169,6 +169,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
         error: "Erreur lors de la mise à jour du profil",
         isLoading: false,
       });
+      throw error;
     }
   },
 
@@ -200,6 +201,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
         error: "Erreur lors de la mise à jour des paramètres",
         isLoading: false,
       });
+      throw error;
     }
   },
 
@@ -253,6 +255,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
             : "Erreur lors du changement de mot de passe",
         isLoading: false,
       });
+      throw error;
     }
   },
 
@@ -284,6 +287,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
         error: "Erreur lors du téléchargement de la photo",
         isLoading: false,
       });
+      throw error;
     }
   },
 
@@ -315,6 +319,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
         error: "Erreur lors de la suppression de la photo",
         isLoading: false,
       });
+      throw error;
     }
   },
 

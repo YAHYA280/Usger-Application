@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Platform,
   ScrollView,
@@ -225,7 +224,6 @@ export const ProfileSettingsScreen: React.FC = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Create styles once per theme change
   const styles = createMainStyles(colors);
 
   // Local state to track changes
@@ -269,14 +267,6 @@ export const ProfileSettingsScreen: React.FC = () => {
     updateAccountSettings({ [key]: value });
   };
 
-  const handleLanguagePress = () => {
-    router.push("./(tabs)/profile/language");
-  };
-
-  const handlePasswordPress = () => {
-    router.push("./(tabs)/profile/change-password");
-  };
-
   if (!profile) {
     return null;
   }
@@ -317,37 +307,10 @@ export const ProfileSettingsScreen: React.FC = () => {
             />
 
             <SettingItem
-              title="Langue de l'application"
-              onPress={handleLanguagePress}
-            />
-
-            <SettingItem
               title="Mode sombre"
               value={localSettings.darkMode}
               onToggle={(value) => handleSettingChange("darkMode", value)}
               showToggle
-            />
-          </SettingSection>
-
-          {/* Security & Privacy Section */}
-          <SettingSection title="Sécurité & confidentialité">
-            <SettingItem
-              title="Modification du mot de passe"
-              onPress={handlePasswordPress}
-            />
-
-            <SettingItem
-              title="La connexion biométrique"
-              value={localSettings.biometricAuth}
-              onToggle={(value) => handleSettingChange("biometricAuth", value)}
-              showToggle
-            />
-
-            <SettingItem
-              title="Gestion des sessions actives"
-              onPress={() =>
-                Alert.alert("Fonctionnalité", "Bientôt disponible")
-              }
             />
           </SettingSection>
         </ScrollView>

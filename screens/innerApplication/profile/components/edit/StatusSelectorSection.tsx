@@ -91,8 +91,6 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case "Actif":
       return "#4CAF50";
-    case "En congé":
-      return "#FF9800";
     case "Inactif":
       return "#F44336";
     default:
@@ -104,8 +102,6 @@ const getStatusIcon = (status: string) => {
   switch (status) {
     case "Actif":
       return "checkmark-circle";
-    case "En congé":
-      return "time";
     case "Inactif":
       return "close-circle";
     default:
@@ -117,8 +113,6 @@ const getStatusDescription = (status: string) => {
   switch (status) {
     case "Actif":
       return "Disponible pour les trajets";
-    case "En congé":
-      return "Temporairement indisponible";
     case "Inactif":
       return "Non disponible";
     default:

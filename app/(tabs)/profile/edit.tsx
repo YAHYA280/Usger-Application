@@ -1,6 +1,6 @@
 import React from "react";
-import { ProfileScreen } from "../../../screens/innerApplication/profile/profileScreen";
+import { EditProfileScreen } from "../../../screens/innerApplication/profile/editProfileScreen";
 
 export default function ProfilePage() {
-  return <ProfileScreen />;
+  return <EditProfileScreen />;
 }

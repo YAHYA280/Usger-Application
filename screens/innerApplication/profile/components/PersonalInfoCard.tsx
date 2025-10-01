@@ -122,8 +122,6 @@ const InfoItem: React.FC<InfoItemProps> = ({
     switch (value) {
       case "Actif":
         return colors.success;
-      case "En congé":
-        return colors.warning;
       case "Inactif":
         return colors.error;
       default:
@@ -157,49 +155,32 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
   style,
 }) => {
   const colors = useThemeColors();
-
   const styles = createCardStyles(colors);
-
-  const calculateAge = (birthDate: string) => {
-    const today = new Date();
-    const birth = new Date(birthDate.split("/").reverse().join("-"));
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birth.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
-  };
-
-  const age = profile.personalInfo.dateOfBirth
-    ? calculateAge(profile.personalInfo.dateOfBirth)
-    : null;
 
   return (
     <View style={[styles.container, style]}>
+      {/* User ID - First */}
+      <InfoItem
+        icon="id-badge"
+        label="Numéro d'identification"
+        value={profile.personalInfo.id}
+      />
+
+      {/* Phone Number */}
       <InfoItem
         icon="phone"
         label="Téléphone"
         value={profile.personalInfo.phoneNumber}
       />
 
+      {/* Email */}
       <InfoItem
         icon="envelope"
-        label="Email"
+        label="E-mail"
         value={profile.personalInfo.email}
       />
 
-      <InfoItem
-        icon="credit-card"
-        label="Numéro de permis"
-        value={profile.professionalInfo.driverId}
-      />
-
+      {/* Status */}
       <InfoItem
         icon="circle"
         label="Statut"
@@ -207,10 +188,7 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
         isStatus={true}
       />
 
-      <ConditionalComponent isValid={!!age}>
-        <InfoItem icon="calendar" label="Âge" value={`${age} ans`} />
-      </ConditionalComponent>
-
+      {/* Address - if available */}
       <ConditionalComponent isValid={!!profile.personalInfo.address}>
         <InfoItem
           icon="map-marker"

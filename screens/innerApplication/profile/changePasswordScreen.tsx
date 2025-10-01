@@ -1,7 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -92,6 +92,40 @@ const createStyles = (colors: any) =>
     buttonContainer: {
       paddingTop: 8,
     },
+    // Success screen styles
+    successContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 32,
+    },
+    successIconContainer: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: "#4CAF50" + "20",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 32,
+    },
+    successTitle: {
+      fontSize: 24,
+      fontWeight: "700",
+      color: colors.text,
+      textAlign: "center",
+      marginBottom: 12,
+    },
+    successMessage: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 24,
+      marginBottom: 48,
+    },
+    successButtonsContainer: {
+      width: "100%",
+      gap: 12,
+    },
   });
 
 const validateFormData = (formData: any) => {
@@ -129,6 +163,7 @@ export const ChangePasswordScreen: React.FC = () => {
   const styles = createStyles(colors);
   const { changePassword, isLoading, error, clearError } = useProfileStore();
 
+  const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -152,12 +187,7 @@ export const ChangePasswordScreen: React.FC = () => {
 
     try {
       await changePassword(formData.currentPassword, formData.newPassword);
-      Alert.alert("Succès", "Votre mot de passe a été modifié avec succès", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
+      setShowSuccess(true);
     } catch (err) {}
   };
 
@@ -170,6 +200,58 @@ export const ChangePasswordScreen: React.FC = () => {
       clearError();
     }
   };
+
+  const handleLoginRedirect = () => {
+    setShowSuccess(false);
+    router.replace("/auth/login");
+  };
+
+  const handleSupportRedirect = () => {
+    setShowSuccess(false);
+    // Navigate to support page or show support modal
+    console.log("Contact support");
+  };
+
+  if (showSuccess) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header
+          leftIcon={{
+            icon: "chevron-left",
+            onPress: () => router.back(),
+          }}
+          title="Modifier le mot de passe"
+        />
+        <View style={styles.successContainer}>
+          <View style={styles.successIconContainer}>
+            <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
+          </View>
+
+          <Text style={styles.successTitle}>
+            Votre mot de passe a été mis à jour avec succès.
+          </Text>
+
+          <Text style={styles.successMessage}>
+            Connectez-vous avec votre nouveau mot de passe.{"\n"}
+            Si ce n'est pas vous, contactez le support.
+          </Text>
+
+          <View style={styles.successButtonsContainer}>
+            <Button
+              title="Se connecter de nouveau"
+              onPress={handleLoginRedirect}
+              variant="primary"
+            />
+            <Button
+              title="Contacter le support"
+              onPress={handleSupportRedirect}
+              variant="outline"
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

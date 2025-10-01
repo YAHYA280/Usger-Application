@@ -1,4 +1,3 @@
-import { Input } from "@/shared/components/ui/Input";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -17,6 +16,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { Button } from "../../../shared/components/ui/Button";
 import { Header } from "../../../shared/components/ui/Header";
+import { Input } from "../../../shared/components/ui/Input";
 import { PersonalInfo } from "../../../shared/types/profile";
 import { useProfileStore } from "../../../store/profileStore";
 import { validateEmail } from "../../../utils/valiators";
@@ -26,7 +26,7 @@ import { StatusSelectorSection } from "./components/edit/StatusSelectorSection";
 
 interface StatusOption {
   label: string;
-  value: "Actif" | "En congé" | "Inactif";
+  value: "Actif" | "Inactif";
 }
 
 interface FormField {
@@ -49,7 +49,6 @@ interface FormField {
 
 const statusOptions: StatusOption[] = [
   { label: "Actif", value: "Actif" },
-  { label: "En congé", value: "En congé" },
   { label: "Inactif", value: "Inactif" },
 ];
 
@@ -170,7 +169,6 @@ export const EditProfileScreen: React.FC = () => {
   const photoAnim = useRef(new Animated.Value(0)).current;
   const slideInAnim = useRef(new Animated.Value(50)).current;
 
-  // Create styles once per theme change
   const styles = createStyles(colors);
 
   const [formData, setFormData] = useState({
@@ -256,10 +254,6 @@ export const EditProfileScreen: React.FC = () => {
       newErrors.driverId = "Le numéro de permis est requis";
     }
 
-    if (!formData.dateOfBirth.trim()) {
-      newErrors.dateOfBirth = "La date de naissance est requise";
-    }
-
     if (!formData.address.trim()) {
       newErrors.address = "L'adresse est requise";
     }
@@ -276,7 +270,6 @@ export const EditProfileScreen: React.FC = () => {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
-        dateOfBirth: formData.dateOfBirth,
         address: formData.address,
       };
 
@@ -404,12 +397,12 @@ export const EditProfileScreen: React.FC = () => {
       editable: true,
     },
     {
-      key: "dateOfBirth",
-      label: "Date de naissance",
-      value: formData.dateOfBirth,
-      placeholder: "Saisissez votre date de naissance (JJ/MM/AAAA)",
-      error: errors.dateOfBirth,
-      editable: true,
+      key: "driverId",
+      label: "Numéro d'identification",
+      value: formData.driverId,
+      placeholder: "Saisissez votre numéro d'identification",
+      error: errors.driverId,
+      editable: false,
     },
     {
       key: "address",
@@ -419,14 +412,6 @@ export const EditProfileScreen: React.FC = () => {
       error: errors.address,
       editable: true,
       autoCapitalize: "words",
-    },
-    {
-      key: "driverId",
-      label: "Numéro du permis",
-      value: formData.driverId,
-      placeholder: "Saisissez votre numéro de permis",
-      error: errors.driverId,
-      editable: false,
     },
   ];
 
