@@ -1,4 +1,3 @@
-// store/profileStore.ts
 import { create } from "zustand";
 import {
   PersonalInfo,
@@ -9,7 +8,6 @@ import {
 
 type ProfileStore = ProfileState & ProfileActions;
 
-// Mock data for profile
 const mockProfile: UserProfile = {
   personalInfo: {
     id: "USER836579376558449",

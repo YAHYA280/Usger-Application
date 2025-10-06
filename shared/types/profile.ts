@@ -1,4 +1,3 @@
-// shared/types/profile.ts
 export interface PersonalInfo {
   id: string;
   fullName: string;
