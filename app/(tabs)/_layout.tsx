@@ -272,6 +272,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="absence"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
