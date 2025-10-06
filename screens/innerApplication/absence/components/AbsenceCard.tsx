@@ -38,16 +38,16 @@ export const AbsenceCard: React.FC<AbsenceCardProps> = ({
     }
   };
 
-  const getTrajetIcon = (): keyof typeof Ionicons.glyphMap => {
-    switch (absence.trajetsConcernes) {
-      case "Aller":
-        return "arrow-forward";
-      case "Retour":
-        return "arrow-back";
-      case "Aller-Retour":
-        return "swap-horizontal";
+  const getIconBackgroundColor = () => {
+    switch (absence.status) {
+      case "En cours":
+        return colors.primary + "20";
+      case "Traité":
+        return colors.success + "20";
+      case "Non Traité":
+        return colors.error + "20";
       default:
-        return "arrow-forward";
+        return colors.textSecondary + "20";
     }
   };
 
@@ -55,11 +55,14 @@ export const AbsenceCard: React.FC<AbsenceCardProps> = ({
     container: {
       backgroundColor: colors.card,
       borderRadius: 12,
-      padding: 16,
+      padding: 20,
       marginHorizontal: 16,
-      marginVertical: 6,
+      marginVertical: 8,
+      flexDirection: "row",
+      alignItems: "flex-start",
       borderLeftWidth: 4,
       borderLeftColor: getStatusColor(),
+      minHeight: 120,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
@@ -77,70 +80,54 @@ export const AbsenceCard: React.FC<AbsenceCardProps> = ({
         },
       }),
     },
+    iconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+      backgroundColor: getIconBackgroundColor(),
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+    },
+    contentContainer: {
+      flex: 1,
+    },
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      marginBottom: 12,
-    },
-    dateContainer: {
-      flex: 1,
+      marginBottom: 8,
     },
     dateRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 4,
-    },
-    dateIcon: {
-      marginRight: 6,
     },
     dateText: {
-      fontSize: 15,
-      fontWeight: "600",
+      fontSize: 16,
+      fontWeight: "700",
       color: colors.text,
     },
-    statusBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-      backgroundColor: getStatusColor() + "20",
+    dateSeparator: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: colors.text,
+      marginHorizontal: 4,
     },
     statusText: {
-      fontSize: 12,
+      fontSize: 14,
       fontWeight: "600",
       color: getStatusColor(),
     },
-    infoRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 8,
-    },
-    infoIcon: {
-      marginRight: 8,
-      width: 20,
-      alignItems: "center",
-    },
-    infoText: {
+    observationsText: {
       fontSize: 14,
       color: colors.textSecondary,
-      flex: 1,
+      lineHeight: 20,
+      marginBottom: 8,
     },
-    observationsContainer: {
-      marginTop: 8,
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    observationsLabel: {
-      fontSize: 12,
-      fontWeight: "600",
-      color: colors.textSecondary,
-      marginBottom: 4,
-    },
-    observationsText: {
-      fontSize: 13,
-      color: colors.textTertiary,
-      lineHeight: 18,
+    personText: {
+      fontSize: 14,
+      color: colors.text,
+      fontWeight: "500",
     },
   });
 
@@ -150,57 +137,35 @@ export const AbsenceCard: React.FC<AbsenceCardProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.header}>
-        <View style={styles.dateContainer}>
-          <View style={styles.dateRow}>
-            <Ionicons
-              name="calendar"
-              size={16}
-              color={colors.primary}
-              style={styles.dateIcon}
-            />
-            <Text style={styles.dateText}>
-              {absence.dateDebut}
-              <ConditionalComponent
-                isValid={absence.dateDebut !== absence.dateFin}
-              >
-                <Text> → {absence.dateFin}</Text>
-              </ConditionalComponent>
-            </Text>
-          </View>
-        </View>
+      {/* Icon */}
+      <View style={styles.iconContainer}>
+        <Ionicons name="calendar" size={28} color={getStatusColor()} />
+      </View>
 
-        <View style={styles.statusBadge}>
+      {/* Content */}
+      <View style={styles.contentContainer}>
+        {/* Date and Status */}
+        <View style={styles.header}>
+          <View>
+            <View style={styles.dateRow}>
+              <Text style={styles.dateText}>{absence.dateDebut}</Text>
+              <Text style={styles.dateSeparator}>→</Text>
+              <Text style={styles.dateText}>{absence.dateFin}</Text>
+            </View>
+          </View>
           <Text style={styles.statusText}>{absence.status}</Text>
         </View>
-      </View>
 
-      <View style={styles.infoRow}>
-        <View style={styles.infoIcon}>
-          <Ionicons
-            name={getTrajetIcon()}
-            size={18}
-            color={colors.textSecondary}
-          />
-        </View>
-        <Text style={styles.infoText}>{absence.trajetsConcernes}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <View style={styles.infoIcon}>
-          <Ionicons name="person" size={18} color={colors.textSecondary} />
-        </View>
-        <Text style={styles.infoText}>Par {absence.personneSignalante}</Text>
-      </View>
-
-      <ConditionalComponent isValid={!!absence.observations}>
-        <View style={styles.observationsContainer}>
-          <Text style={styles.observationsLabel}>Observations</Text>
-          <Text style={styles.observationsText} numberOfLines={2}>
+        {/* Observations */}
+        <ConditionalComponent isValid={!!absence.observations}>
+          <Text style={styles.observationsText} numberOfLines={1}>
             {absence.observations}
           </Text>
-        </View>
-      </ConditionalComponent>
+        </ConditionalComponent>
+
+        {/* Person */}
+        <Text style={styles.personText}>Par {absence.personneSignalante}</Text>
+      </View>
     </TouchableOpacity>
   );
 };

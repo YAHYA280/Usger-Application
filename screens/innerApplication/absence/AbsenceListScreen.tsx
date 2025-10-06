@@ -62,6 +62,7 @@ export const AbsenceListScreen: React.FC = () => {
   const { colors } = useTheme();
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     filteredAbsences,
@@ -98,7 +99,11 @@ export const AbsenceListScreen: React.FC = () => {
   };
 
   const handleSearch = (query: string) => {
+    setSearchQuery(query);
     searchAbsences(query);
+  };
+
+  const handleCloseSearch = () => {
     setShowSearchModal(false);
   };
 
@@ -161,10 +166,12 @@ export const AbsenceListScreen: React.FC = () => {
         style={styles.emptyIcon}
       />
       <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        Aucune absence
+        {searchQuery ? "Aucun résultat" : "Aucune absence"}
       </Text>
       <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-        Les absences enregistrées apparaîtront ici
+        {searchQuery
+          ? "Aucune absence ne correspond à votre recherche"
+          : "Les absences enregistrées apparaîtront ici"}
       </Text>
     </View>
   );
@@ -241,6 +248,10 @@ export const AbsenceListScreen: React.FC = () => {
           subtitle={`${filteredAbsences.length} absence(s)`}
           rightIcons={[
             {
+              icon: "search",
+              onPress: handleSearchPress,
+            },
+            {
               icon: "bell",
               onPress: handleNotificationPress,
               badge: 3,
@@ -283,10 +294,11 @@ export const AbsenceListScreen: React.FC = () => {
       {/* Search Modal */}
       <SearchModal
         visible={showSearchModal}
-        onClose={() => setShowSearchModal(false)}
+        onClose={handleCloseSearch}
         onSearch={handleSearch}
         placeholder="Rechercher une absence..."
         title="Rechercher"
+        initialQuery={searchQuery}
       />
 
       {/* Sidebar Menu */}

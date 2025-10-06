@@ -1,3 +1,4 @@
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -40,6 +41,11 @@ export const AbsenceAddScreen: React.FC = () => {
     personneSignalante: "",
   });
 
+  const [showDateDebutPicker, setShowDateDebutPicker] = useState(false);
+  const [showDateFinPicker, setShowDateFinPicker] = useState(false);
+  const [dateDebut, setDateDebut] = useState(new Date());
+  const [dateFin, setDateFin] = useState(new Date());
+
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -49,6 +55,13 @@ export const AbsenceAddScreen: React.FC = () => {
   }, []);
 
   const trajetOptions: TrajetsType[] = ["Aller", "Retour", "Aller-Retour"];
+
+  const formatDate = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   const validateForm = () => {
     const newErrors = {
@@ -87,6 +100,24 @@ export const AbsenceAddScreen: React.FC = () => {
     setFormData((prev) => ({ ...prev, trajetsConcernes: trajet }));
   };
 
+  const handleDateDebutChange = (event: any, selectedDate?: Date) => {
+    setShowDateDebutPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setDateDebut(selectedDate);
+      const formattedDate = formatDate(selectedDate);
+      handleInputChange("dateDebut", formattedDate);
+    }
+  };
+
+  const handleDateFinChange = (event: any, selectedDate?: Date) => {
+    setShowDateFinPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setDateFin(selectedDate);
+      const formattedDate = formatDate(selectedDate);
+      handleInputChange("dateFin", formattedDate);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -117,7 +148,7 @@ export const AbsenceAddScreen: React.FC = () => {
     scrollContent: {
       paddingHorizontal: 16,
       paddingTop: 20,
-      paddingBottom: Platform.OS === "ios" ? 40 : 20,
+      paddingBottom: 80,
     },
     card: {
       backgroundColor: colors.card,
@@ -153,6 +184,9 @@ export const AbsenceAddScreen: React.FC = () => {
     inputContainer: {
       marginBottom: 16,
     },
+    dateInputTouchable: {
+      marginBottom: 16,
+    },
     trajetLabel: {
       fontSize: 14,
       fontWeight: "600",
@@ -179,6 +213,23 @@ export const AbsenceAddScreen: React.FC = () => {
       borderColor: colors.primary,
       backgroundColor: colors.primary + "15",
     },
+    trajetContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    radioDot: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.backgroundSecondary,
+    },
+    radioDotSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primary,
+    },
     trajetOptionText: {
       fontSize: 14,
       fontWeight: "500",
@@ -200,6 +251,8 @@ export const AbsenceAddScreen: React.FC = () => {
     },
     buttonContainer: {
       gap: 12,
+      marginTop: 16,
+      marginBottom: 20,
     },
   });
 
@@ -234,30 +287,55 @@ export const AbsenceAddScreen: React.FC = () => {
               </ConditionalComponent>
 
               {/* Date de début */}
-              <View style={styles.inputContainer}>
+              <TouchableOpacity
+                style={styles.dateInputTouchable}
+                onPress={() => setShowDateDebutPicker(true)}
+              >
                 <Input
                   label="Date de début"
                   value={formData.dateDebut}
-                  onChangeText={(value) =>
-                    handleInputChange("dateDebut", value)
-                  }
                   placeholder="JJ/MM/AAAA"
                   error={errors.dateDebut}
                   rightIcon="calendar"
+                  editable={false}
+                  pointerEvents="none"
                 />
-              </View>
+              </TouchableOpacity>
+
+              {showDateDebutPicker && (
+                <DateTimePicker
+                  value={dateDebut}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleDateDebutChange}
+                />
+              )}
 
               {/* Date de fin */}
-              <View style={styles.inputContainer}>
+              <TouchableOpacity
+                style={styles.dateInputTouchable}
+                onPress={() => setShowDateFinPicker(true)}
+              >
                 <Input
                   label="Date de fin"
                   value={formData.dateFin}
-                  onChangeText={(value) => handleInputChange("dateFin", value)}
                   placeholder="JJ/MM/AAAA"
                   error={errors.dateFin}
                   rightIcon="calendar"
+                  editable={false}
+                  pointerEvents="none"
                 />
-              </View>
+              </TouchableOpacity>
+
+              {showDateFinPicker && (
+                <DateTimePicker
+                  value={dateFin}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleDateFinChange}
+                  minimumDate={dateDebut}
+                />
+              )}
 
               {/* Trajets concernés */}
               <View style={styles.inputContainer}>
@@ -274,15 +352,24 @@ export const AbsenceAddScreen: React.FC = () => {
                       onPress={() => handleTrajetSelect(trajet)}
                       activeOpacity={0.7}
                     >
-                      <Text
-                        style={[
-                          styles.trajetOptionText,
-                          formData.trajetsConcernes === trajet &&
-                            styles.trajetOptionTextSelected,
-                        ]}
-                      >
-                        {trajet}
-                      </Text>
+                      <View style={styles.trajetContent}>
+                        <View
+                          style={[
+                            styles.radioDot,
+                            formData.trajetsConcernes === trajet &&
+                              styles.radioDotSelected,
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.trajetOptionText,
+                            formData.trajetsConcernes === trajet &&
+                              styles.trajetOptionTextSelected,
+                          ]}
+                        >
+                          {trajet}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -317,7 +404,7 @@ export const AbsenceAddScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Now inside ScrollView */}
             <View style={styles.buttonContainer}>
               <Button
                 title="Ajouter une absence"

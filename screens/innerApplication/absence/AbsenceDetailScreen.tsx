@@ -1,19 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
-import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
-import { Button } from "../../../shared/components/ui/Button";
 import { Header } from "../../../shared/components/ui/Header";
 import { useAbsenceStore } from "../../../store/absenceStore";
 
@@ -26,6 +27,7 @@ export const AbsenceDetailScreen: React.FC = () => {
   const absence = getAbsenceById(absenceId);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -35,39 +37,13 @@ export const AbsenceDetailScreen: React.FC = () => {
     }).start();
   }, []);
 
-  const getStatusColor = () => {
-    if (!absence) return colors.textSecondary;
-    switch (absence.status) {
-      case "En cours":
-        return colors.primary;
-      case "Traité":
-        return colors.success;
-      case "Non Traité":
-        return colors.error;
-      default:
-        return colors.textSecondary;
-    }
-  };
-
-  const getTrajetIcon = (): keyof typeof Ionicons.glyphMap => {
-    if (!absence) return "arrow-forward";
-    switch (absence.trajetsConcernes) {
-      case "Aller":
-        return "arrow-forward";
-      case "Retour":
-        return "arrow-back";
-      case "Aller-Retour":
-        return "swap-horizontal";
-      default:
-        return "arrow-forward";
-    }
-  };
-
   const handleEdit = () => {
-    router.push(`./absence/edit/${absenceId}`);
+    setShowMenu(false);
+    router.push(`/absence/edit/${absenceId}`);
   };
 
   const handleDelete = () => {
+    setShowMenu(false);
     Alert.alert(
       "Supprimer l'absence",
       "Êtes-vous sûr de vouloir supprimer cette absence ?",
@@ -89,6 +65,20 @@ export const AbsenceDetailScreen: React.FC = () => {
     );
   };
 
+  const getStatusColor = () => {
+    if (!absence) return colors.textSecondary;
+    switch (absence.status) {
+      case "En cours":
+        return colors.primary;
+      case "Traité":
+        return colors.success;
+      case "Non Traité":
+        return colors.error;
+      default:
+        return colors.textSecondary;
+    }
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -98,146 +88,44 @@ export const AbsenceDetailScreen: React.FC = () => {
       flex: 1,
     },
     scrollContent: {
+      padding: 16,
       paddingBottom: 100,
     },
-    statusCard: {
+    detailRow: {
       backgroundColor: colors.card,
-      marginHorizontal: 16,
-      marginTop: 16,
-      marginBottom: 8,
-      borderRadius: 12,
-      padding: 20,
-      borderLeftWidth: 4,
-      borderLeftColor: getStatusColor(),
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: colors.isDark ? 0.3 : 0.08,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 3,
-        },
-        web: {
-          boxShadow: colors.isDark
-            ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-            : "0 2px 8px rgba(0, 0, 0, 0.08)",
-        },
-      }),
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      marginBottom: 1,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
-    statusBadge: {
-      alignSelf: "flex-start",
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 12,
-      backgroundColor: getStatusColor() + "20",
+    firstRow: {
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+    },
+    lastRow: {
+      borderBottomLeftRadius: 12,
+      borderBottomRightRadius: 12,
       marginBottom: 16,
     },
-    statusText: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: getStatusColor(),
-    },
-    dateRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 8,
-    },
-    dateIcon: {
-      marginRight: 8,
-    },
-    dateText: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: colors.text,
-    },
-    infoCard: {
-      backgroundColor: colors.card,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 12,
-      padding: 20,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: colors.isDark ? 0.3 : 0.08,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 3,
-        },
-        web: {
-          boxShadow: colors.isDark
-            ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-            : "0 2px 8px rgba(0, 0, 0, 0.08)",
-        },
-      }),
-    },
-    sectionTitle: {
+    label: {
       fontSize: 16,
-      fontWeight: "700",
+      fontWeight: "600",
       color: colors.text,
-      marginBottom: 16,
-    },
-    infoRow: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      marginBottom: 16,
-    },
-    infoIcon: {
-      marginRight: 12,
-      width: 24,
-      alignItems: "center",
-      marginTop: 2,
-    },
-    infoContent: {
       flex: 1,
     },
-    infoLabel: {
-      fontSize: 13,
-      fontWeight: "600",
+    value: {
+      fontSize: 16,
       color: colors.textSecondary,
-      marginBottom: 4,
+      textAlign: "right",
+      flex: 1,
     },
-    infoValue: {
-      fontSize: 15,
-      color: colors.text,
-      lineHeight: 20,
-    },
-    observationsCard: {
-      backgroundColor: colors.card,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 12,
-      padding: 20,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: colors.isDark ? 0.3 : 0.08,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 3,
-        },
-        web: {
-          boxShadow: colors.isDark
-            ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-            : "0 2px 8px rgba(0, 0, 0, 0.08)",
-        },
-      }),
-    },
-    observationsText: {
-      fontSize: 15,
+    observationValue: {
+      fontSize: 16,
       color: colors.textSecondary,
-      lineHeight: 22,
-    },
-    actionButtons: {
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      gap: 12,
+      textAlign: "right",
+      flex: 1.5,
     },
     errorContainer: {
       flex: 1,
@@ -258,6 +146,59 @@ export const AbsenceDetailScreen: React.FC = () => {
       textAlign: "center",
       marginBottom: 24,
     },
+    menuModal: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "flex-start",
+      alignItems: "flex-end",
+    },
+    menuContainer: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      marginTop: 60,
+      marginRight: 16,
+      minWidth: 180,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: colors.isDark ? 0.3 : 0.2,
+          shadowRadius: 8,
+        },
+        android: {
+          elevation: 8,
+        },
+        web: {
+          boxShadow: colors.isDark
+            ? "0 4px 8px rgba(0, 0, 0, 0.3)"
+            : "0 4px 8px rgba(0, 0, 0, 0.2)",
+        },
+      }),
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    lastMenuItem: {
+      borderBottomWidth: 0,
+    },
+    menuIcon: {
+      marginRight: 12,
+      width: 24,
+      alignItems: "center",
+    },
+    menuText: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: colors.text,
+    },
+    menuTextDelete: {
+      color: colors.error,
+    },
   });
 
   if (!absence) {
@@ -275,7 +216,6 @@ export const AbsenceDetailScreen: React.FC = () => {
           <Text style={styles.errorSubtext}>
             Cette absence n'existe pas ou a été supprimée.
           </Text>
-          <Button title="Retour" onPress={() => router.back()} />
         </View>
       </SafeAreaView>
     );
@@ -288,7 +228,13 @@ export const AbsenceDetailScreen: React.FC = () => {
           icon: "chevron-left",
           onPress: () => router.back(),
         }}
-        title="Détails de l'absence"
+        title="Détails d'une absence"
+        rightIcons={[
+          {
+            icon: "ellipsis-v",
+            onPress: () => setShowMenu(true),
+          },
+        ]}
       />
 
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
@@ -296,123 +242,91 @@ export const AbsenceDetailScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Status Card */}
-          <View style={styles.statusCard}>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>{absence.status}</Text>
-            </View>
-
-            <View style={styles.dateRow}>
-              <Ionicons
-                name="calendar"
-                size={20}
-                color={colors.primary}
-                style={styles.dateIcon}
-              />
-              <Text style={styles.dateText}>
-                {absence.dateDebut}
-                <ConditionalComponent
-                  isValid={absence.dateDebut !== absence.dateFin}
-                >
-                  <Text> → {absence.dateFin}</Text>
-                </ConditionalComponent>
-              </Text>
-            </View>
+          {/* Date de début */}
+          <View style={[styles.detailRow, styles.firstRow]}>
+            <Text style={styles.label}>Date de début</Text>
+            <Text style={styles.value}>{absence.dateDebut}</Text>
           </View>
 
-          {/* Info Card */}
-          <View style={styles.infoCard}>
-            <Text style={styles.sectionTitle}>Informations</Text>
-
-            <View style={styles.infoRow}>
-              <View style={styles.infoIcon}>
-                <Ionicons
-                  name={getTrajetIcon()}
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Trajets concernés</Text>
-                <Text style={styles.infoValue}>{absence.trajetsConcernes}</Text>
-              </View>
-            </View>
-
-            <View style={styles.infoRow}>
-              <View style={styles.infoIcon}>
-                <Ionicons
-                  name="person"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Personne ayant signalé</Text>
-                <Text style={styles.infoValue}>
-                  {absence.personneSignalante}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.infoRow}>
-              <View style={styles.infoIcon}>
-                <Ionicons
-                  name="document-text"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Mode de saisie</Text>
-                <Text style={styles.infoValue}>{absence.modeSaisie}</Text>
-              </View>
-            </View>
-
-            <ConditionalComponent isValid={!!absence.societe}>
-              <View style={styles.infoRow}>
-                <View style={styles.infoIcon}>
-                  <Ionicons
-                    name="business"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </View>
-                <View style={styles.infoContent}>
-                  <Text style={styles.infoLabel}>Société</Text>
-                  <Text style={styles.infoValue}>{absence.societe}</Text>
-                </View>
-              </View>
-            </ConditionalComponent>
+          {/* Date de fin */}
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Date de fin</Text>
+            <Text style={styles.value}>{absence.dateFin}</Text>
           </View>
 
-          {/* Observations Card */}
-          <ConditionalComponent isValid={!!absence.observations}>
-            <View style={styles.observationsCard}>
-              <Text style={styles.sectionTitle}>Observations</Text>
-              <Text style={styles.observationsText}>
-                {absence.observations}
-              </Text>
-            </View>
-          </ConditionalComponent>
+          {/* Statut */}
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Statut</Text>
+            <Text style={[styles.value, { color: getStatusColor() }]}>
+              {absence.status}
+            </Text>
+          </View>
+
+          {/* Trajets concernés */}
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Trajets concernés</Text>
+            <Text style={styles.value}>{absence.trajetsConcernes}</Text>
+          </View>
+
+          {/* Observations */}
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Observations</Text>
+            <Text style={styles.observationValue} numberOfLines={2}>
+              {absence.observations}
+            </Text>
+          </View>
+
+          {/* Personne signalante */}
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Personne ayant signalé l'absence</Text>
+            <Text style={styles.value}>{absence.personneSignalante}</Text>
+          </View>
+
+          {/* Mode de saisie */}
+          <View style={[styles.detailRow, styles.lastRow]}>
+            <Text style={styles.label}>Mode de saisie</Text>
+            <Text style={styles.value}>{absence.modeSaisie}</Text>
+          </View>
         </ScrollView>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <Button
-            title="Modifier l'absence"
-            onPress={handleEdit}
-            variant="primary"
-            disabled={isLoading}
-          />
-          <Button
-            title="Supprimer"
-            onPress={handleDelete}
-            variant="outline"
-            disabled={isLoading}
-            textStyle={{ color: colors.error }}
-          />
-        </View>
       </Animated.View>
+
+      {/* Menu Modal */}
+      <Modal
+        visible={showMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMenu(false)}
+      >
+        <Pressable style={styles.menuModal} onPress={() => setShowMenu(false)}>
+          <Pressable style={styles.menuContainer}>
+            {/* Modifier */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleEdit}
+              activeOpacity={0.7}
+            >
+              <View style={styles.menuIcon}>
+                <Ionicons name="create-outline" size={20} color={colors.text} />
+              </View>
+              <Text style={styles.menuText}>Modifier</Text>
+            </TouchableOpacity>
+
+            {/* Supprimer */}
+            <TouchableOpacity
+              style={[styles.menuItem, styles.lastMenuItem]}
+              onPress={handleDelete}
+              activeOpacity={0.7}
+            >
+              <View style={styles.menuIcon}>
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
+              </View>
+              <Text style={[styles.menuText, styles.menuTextDelete]}>
+                Supprimer
+              </Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
