@@ -1,5 +1,4 @@
 export type DocumentType = "Contrat" | "Décharge" | "Attestation" | "Autre";
-export type DocumentStatus = "En cours" | "Validé" | "Expiré";
 export type DocumentCategory = "Actif" | "Archivé";
 
 export interface Document {
@@ -7,7 +6,6 @@ export interface Document {
   numero: string;
   nom: string;
   type: DocumentType;
-  status: DocumentStatus;
   category: DocumentCategory;
   dateCreation: string;
   dateMiseAJour: string;
@@ -18,7 +16,6 @@ export interface Document {
   fileType: "pdf" | "word" | "image";
   fileSize: string;
   createdBy?: string;
-  validatedBy?: string;
   usagerId: string;
   usagerNom?: string;
 }
@@ -26,7 +23,6 @@ export interface Document {
 export interface DocumentFilters {
   searchQuery?: string;
   type?: DocumentType[];
-  status?: DocumentStatus[];
   category?: DocumentCategory[];
   dateFrom?: Date;
   dateTo?: Date;
@@ -40,9 +36,7 @@ export type DocumentSortBy =
   | "date-maj-asc"
   | "date-maj-desc"
   | "type-asc"
-  | "type-desc"
-  | "status-asc"
-  | "status-desc";
+  | "type-desc";
 
 export interface DocumentFormData {
   nom: string;
@@ -75,6 +69,8 @@ export interface DocumentActions {
   downloadDocument: (id: string) => Promise<void>;
   deleteDocument: (id: string) => Promise<void>;
   exportDocuments: (ids: string[]) => Promise<void>;
+  archiveDocument: (id: string) => Promise<void>;
+  unarchiveDocument: (id: string) => Promise<void>;
 
   setFilters: (filters: Partial<DocumentFilters>) => void;
   clearFilters: () => void;

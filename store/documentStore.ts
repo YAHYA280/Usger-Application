@@ -32,10 +32,6 @@ const applyFiltersAndSort = (
     filtered = filtered.filter((doc) => filters.type!.includes(doc.type));
   }
 
-  if (filters.status && filters.status.length > 0) {
-    filtered = filtered.filter((doc) => filters.status!.includes(doc.status));
-  }
-
   if (filters.category && filters.category.length > 0) {
     filtered = filtered.filter((doc) =>
       filters.category!.includes(doc.category)
@@ -85,10 +81,6 @@ const applyFiltersAndSort = (
         return a.type.localeCompare(b.type);
       case "type-desc":
         return b.type.localeCompare(a.type);
-      case "status-asc":
-        return a.status.localeCompare(b.status);
-      case "status-desc":
-        return b.status.localeCompare(a.status);
       default:
         return 0;
     }
@@ -101,15 +93,13 @@ const mockDocuments: Document[] = [
   {
     id: "1",
     numero: "08658",
-    nom: "Décharge de responsabilité",
-    type: "Décharge",
-    status: "En cours",
+    nom: "Attestation de reussite",
+    type: "Attestation",
     category: "Actif",
-    dateCreation: "10/04/2025",
+    dateCreation: "20/03/2025",
     dateMiseAJour: "20/03/2025",
-    description: "Décharge de responsabilité pour le transport scolaire",
-    observations:
-      "Je prends quelques jours pour des raisons personnelles. Merci de votre compréhension",
+    description: "Attestation de présence pour le mois de mars",
+    observations: "Les infos n'ont pas claires",
     fileUrl: "https://example.com/doc1.pdf",
     fileType: "pdf",
     fileSize: "3,2 Mo",
@@ -119,13 +109,12 @@ const mockDocuments: Document[] = [
   {
     id: "2",
     numero: "08659",
-    nom: "Attestation de présence",
-    type: "Attestation",
-    status: "Validé",
+    nom: "Contrat de service",
+    type: "Contrat",
     category: "Actif",
     dateCreation: "15/03/2025",
-    dateMiseAJour: "20/03/2025",
-    description: "Attestation de présence pour le mois de mars",
+    dateMiseAJour: "15/03/2025",
+    description: "Contrat de service pour l'année scolaire 2024-2025",
     fileUrl: "https://example.com/doc2.pdf",
     fileType: "pdf",
     fileSize: "1,5 Mo",
@@ -135,13 +124,12 @@ const mockDocuments: Document[] = [
   {
     id: "3",
     numero: "03846493",
-    nom: "Contrat du service",
-    type: "Contrat",
-    status: "En cours",
+    nom: "Décharge parentale",
+    type: "Décharge",
     category: "Actif",
     dateCreation: "10/04/2025",
-    dateMiseAJour: "20/03/2025",
-    description: "Contrat de service pour l'année scolaire 2024-2025",
+    dateMiseAJour: "10/04/2025",
+    description: "Décharge de responsabilité pour le transport scolaire",
     observations:
       "Je prends quelques jours pour des raisons personnelles. Merci de votre compréhension",
     fileUrl: "https://example.com/doc3.pdf",
@@ -155,7 +143,6 @@ const mockDocuments: Document[] = [
     numero: "08660",
     nom: "Attestation de scolarité",
     type: "Attestation",
-    status: "Validé",
     category: "Archivé",
     dateCreation: "01/02/2025",
     dateMiseAJour: "05/02/2025",
@@ -170,9 +157,8 @@ const mockDocuments: Document[] = [
   {
     id: "5",
     numero: "08661",
-    nom: "Décharge parentale",
+    nom: "Décharge parentale ancienne",
     type: "Décharge",
-    status: "Expiré",
     category: "Archivé",
     dateCreation: "10/01/2025",
     dateMiseAJour: "15/01/2025",
@@ -237,7 +223,6 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
         numero: `${Math.floor(10000 + Math.random() * 90000)}`,
         nom: data.nom,
         type: data.type,
-        status: "En cours",
         category: "Actif",
         dateCreation: new Date().toLocaleDateString("fr-FR"),
         dateMiseAJour: new Date().toLocaleDateString("fr-FR"),
@@ -331,6 +316,66 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
     } catch (error) {
       set({
         error: "Erreur lors de l'export",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  archiveDocument: async (id: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      set((state) => {
+        const updatedDocuments = state.documents.map((doc) =>
+          doc.id === id ? { ...doc, category: "Archivé" as const } : doc
+        );
+        const filteredDocuments = applyFiltersAndSort(
+          updatedDocuments,
+          state.filters,
+          state.sortBy
+        );
+
+        return {
+          documents: updatedDocuments,
+          filteredDocuments,
+          isLoading: false,
+        };
+      });
+    } catch (error) {
+      set({
+        error: "Erreur lors de l'archivage",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  unarchiveDocument: async (id: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      set((state) => {
+        const updatedDocuments = state.documents.map((doc) =>
+          doc.id === id ? { ...doc, category: "Actif" as const } : doc
+        );
+        const filteredDocuments = applyFiltersAndSort(
+          updatedDocuments,
+          state.filters,
+          state.sortBy
+        );
+
+        return {
+          documents: updatedDocuments,
+          filteredDocuments,
+          isLoading: false,
+        };
+      });
+    } catch (error) {
+      set({
+        error: "Erreur lors de la désarchivage",
         isLoading: false,
       });
       throw error;

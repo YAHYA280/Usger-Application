@@ -9,7 +9,6 @@ import {
   ViewStyle,
 } from "react-native";
 import { useThemeColors } from "../../../../hooks/useTheme";
-import ConditionalComponent from "../../../../shared/components/conditionalComponent/conditionalComponent";
 import { Document } from "../../../../shared/types/document";
 
 interface DocumentCardProps {
@@ -24,32 +23,6 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
   style,
 }) => {
   const colors = useThemeColors();
-
-  const getStatusColor = () => {
-    switch (document.status) {
-      case "En cours":
-        return colors.primary;
-      case "Validé":
-        return colors.success;
-      case "Expiré":
-        return colors.error;
-      default:
-        return colors.textSecondary;
-    }
-  };
-
-  const getIconBackgroundColor = () => {
-    switch (document.status) {
-      case "En cours":
-        return colors.primary + "20";
-      case "Validé":
-        return colors.success + "20";
-      case "Expiré":
-        return colors.error + "20";
-      default:
-        return colors.textSecondary + "20";
-    }
-  };
 
   const getFileIcon = () => {
     switch (document.fileType) {
@@ -68,14 +41,14 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
     container: {
       backgroundColor: colors.card,
       borderRadius: 12,
-      padding: 20,
+      padding: 16,
       marginHorizontal: 16,
-      marginVertical: 8,
+      marginVertical: 6,
       flexDirection: "row",
-      alignItems: "flex-start",
+      alignItems: "center",
+      minHeight: 105,
       borderLeftWidth: 4,
-      borderLeftColor: getStatusColor(),
-      minHeight: 120,
+      borderLeftColor: colors.primary,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
@@ -94,26 +67,16 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
       }),
     },
     iconContainer: {
-      width: 56,
-      height: 56,
+      width: 48,
+      height: 48,
       borderRadius: 12,
-      backgroundColor: getIconBackgroundColor(),
+      backgroundColor: colors.primary + "20",
       alignItems: "center",
       justifyContent: "center",
       marginRight: 12,
     },
     contentContainer: {
       flex: 1,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      marginBottom: 8,
-    },
-    titleContainer: {
-      flex: 1,
-      marginRight: 8,
     },
     numeroText: {
       fontSize: 12,
@@ -123,39 +86,22 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
     },
     nomText: {
       fontSize: 16,
-      fontWeight: "700",
-      color: colors.text,
-    },
-    typeText: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: colors.textSecondary,
-      marginTop: 4,
-    },
-    statusText: {
-      fontSize: 14,
       fontWeight: "600",
-      color: getStatusColor(),
-    },
-    descriptionText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      lineHeight: 20,
+      color: colors.text,
       marginBottom: 8,
     },
-    footer: {
+    footerRow: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginTop: 8,
+      marginTop: 4,
     },
     dateText: {
-      fontSize: 12,
-      color: colors.textTertiary,
+      fontSize: 13,
+      color: colors.textSecondary,
     },
-    fileSizeText: {
-      fontSize: 12,
-      fontWeight: "500",
+    sizeText: {
+      fontSize: 13,
       color: colors.textSecondary,
     },
   });
@@ -169,34 +115,20 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
       <View style={styles.iconContainer}>
         <Ionicons
           name={getFileIcon() as any}
-          size={28}
-          color={getStatusColor()}
+          size={24}
+          color={colors.primary}
         />
       </View>
 
       <View style={styles.contentContainer}>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.numeroText}>N° {document.numero}</Text>
-            <Text style={styles.nomText} numberOfLines={1}>
-              {document.nom}
-            </Text>
-            <Text style={styles.typeText}>{document.type}</Text>
-          </View>
-          <Text style={styles.statusText}>{document.status}</Text>
-        </View>
+        <Text style={styles.numeroText}>N° {document.numero}</Text>
+        <Text style={styles.nomText} numberOfLines={1}>
+          {document.nom}
+        </Text>
 
-        <ConditionalComponent isValid={!!document.description}>
-          <Text style={styles.descriptionText} numberOfLines={2}>
-            {document.description}
-          </Text>
-        </ConditionalComponent>
-
-        <View style={styles.footer}>
-          <Text style={styles.dateText}>
-            Modifié le {document.dateMiseAJour}
-          </Text>
-          <Text style={styles.fileSizeText}>{document.fileSize}</Text>
+        <View style={styles.footerRow}>
+          <Text style={styles.dateText}>ajouté le {document.dateCreation}</Text>
+          <Text style={styles.sizeText}>{document.fileSize}</Text>
         </View>
       </View>
     </TouchableOpacity>

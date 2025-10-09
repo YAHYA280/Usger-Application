@@ -18,14 +18,12 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { Button } from "../../../shared/components/ui/Button";
 import { Header } from "../../../shared/components/ui/Header";
-import { Input } from "../../../shared/components/ui/Input";
-import { DocumentFormData, DocumentType } from "../../../shared/types/document";
+import { DocumentFormData } from "../../../shared/types/document";
 import { useDocumentStore } from "../../../store/documentStore";
 
 export const DocumentUploadScreen: React.FC = () => {
   const { colors } = useTheme();
-  const { uploadDocument, isLoading, error, clearError, uploadProgress } =
-    useDocumentStore();
+  const { uploadDocument, isLoading, error, clearError } = useDocumentStore();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -38,7 +36,6 @@ export const DocumentUploadScreen: React.FC = () => {
   });
 
   const [errors, setErrors] = useState({
-    nom: "",
     file: "",
   });
 
@@ -49,45 +46,6 @@ export const DocumentUploadScreen: React.FC = () => {
       useNativeDriver: true,
     }).start();
   }, []);
-
-  const documentTypes: DocumentType[] = [
-    "Contrat",
-    "Décharge",
-    "Attestation",
-    "Autre",
-  ];
-
-  const validateForm = () => {
-    const newErrors = {
-      nom: "",
-      file: "",
-    };
-
-    if (!formData.nom?.trim()) {
-      newErrors.nom = "Le nom du document est requis";
-    }
-
-    if (!formData.file) {
-      newErrors.file = "Veuillez sélectionner un fichier";
-    }
-
-    setErrors(newErrors);
-    return !Object.values(newErrors).some((error) => error !== "");
-  };
-
-  const handleInputChange = (field: keyof DocumentFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field as keyof typeof errors]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-    if (error) {
-      clearError();
-    }
-  };
-
-  const handleTypeSelect = (type: DocumentType) => {
-    setFormData((prev) => ({ ...prev, type }));
-  };
 
   const handleSelectFile = async () => {
     try {
@@ -106,20 +64,23 @@ export const DocumentUploadScreen: React.FC = () => {
             type: file.mimeType || "application/octet-stream",
             size: file.size || 0,
           },
+          nom: file.name.replace(/\.[^/.]+$/, ""), // Remove extension from filename
         }));
         setErrors((prev) => ({ ...prev, file: "" }));
+        if (error) {
+          clearError();
+        }
       }
     } catch (error) {
       Alert.alert("Erreur", "Impossible de sélectionner le fichier");
     }
   };
 
-  const handleRemoveFile = () => {
-    setFormData((prev) => ({ ...prev, file: undefined }));
-  };
-
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!formData.file) {
+      setErrors({ file: "Veuillez sélectionner un fichier" });
+      return;
+    }
 
     try {
       await uploadDocument(formData as DocumentFormData);
@@ -165,12 +126,12 @@ export const DocumentUploadScreen: React.FC = () => {
     scrollContent: {
       paddingHorizontal: 16,
       paddingTop: 20,
-      paddingBottom: 80,
+      paddingBottom: 100,
     },
     card: {
       backgroundColor: colors.card,
       borderRadius: 16,
-      padding: 24,
+      padding: 20,
       marginBottom: 16,
       ...Platform.select({
         ios: {
@@ -188,65 +149,10 @@ export const DocumentUploadScreen: React.FC = () => {
       }),
     },
     cardTitle: {
-      fontSize: 18,
-      fontWeight: "700",
+      fontSize: 16,
+      fontWeight: "600",
       color: colors.text,
       marginBottom: 16,
-    },
-    inputContainer: {
-      marginBottom: 16,
-    },
-    typeLabel: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: colors.textSecondary,
-      marginBottom: 12,
-    },
-    typeOptions: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-    typeOption: {
-      flex: 1,
-      minWidth: "30%",
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 8,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.backgroundSecondary,
-      alignItems: "center",
-    },
-    typeOptionSelected: {
-      borderColor: colors.primary,
-      backgroundColor: colors.primary + "15",
-    },
-    typeContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-    },
-    radioDot: {
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      borderWidth: 2,
-      borderColor: colors.border,
-      backgroundColor: colors.backgroundSecondary,
-    },
-    radioDotSelected: {
-      borderColor: colors.primary,
-      backgroundColor: colors.primary,
-    },
-    typeOptionText: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: colors.textSecondary,
-    },
-    typeOptionTextSelected: {
-      color: colors.primary,
-      fontWeight: "600",
     },
     fileSection: {
       marginBottom: 16,
@@ -262,7 +168,7 @@ export const DocumentUploadScreen: React.FC = () => {
       borderStyle: "dashed",
       borderColor: colors.border,
       borderRadius: 12,
-      padding: 24,
+      padding: 32,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: colors.backgroundSecondary,
@@ -281,6 +187,18 @@ export const DocumentUploadScreen: React.FC = () => {
     },
     fileSelectSubtext: {
       fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: "center",
+      marginTop: 4,
+    },
+    orText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: "center",
+      marginVertical: 12,
+    },
+    dragDropText: {
+      fontSize: 13,
       color: colors.textSecondary,
       textAlign: "center",
     },
@@ -334,29 +252,8 @@ export const DocumentUploadScreen: React.FC = () => {
       marginTop: 8,
     },
     buttonContainer: {
-      gap: 12,
-      marginTop: 16,
+      marginTop: 20,
       marginBottom: 20,
-    },
-    progressContainer: {
-      marginTop: 16,
-      marginBottom: 16,
-    },
-    progressBar: {
-      height: 8,
-      backgroundColor: colors.border,
-      borderRadius: 4,
-      overflow: "hidden",
-    },
-    progressFill: {
-      height: "100%",
-      backgroundColor: colors.primary,
-    },
-    progressText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: "center",
-      marginTop: 8,
     },
   });
 
@@ -367,7 +264,7 @@ export const DocumentUploadScreen: React.FC = () => {
           icon: "chevron-left",
           onPress: () => router.back(),
         }}
-        title="Importer un document"
+        title="Envoyer un document"
       />
 
       <KeyboardAvoidingView
@@ -382,91 +279,16 @@ export const DocumentUploadScreen: React.FC = () => {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Informations du document</Text>
+              <Text style={styles.cardTitle}>
+                Téléchargez un document aux formats document ou image
+                (PDF,Word,Jpg...)
+              </Text>
 
               <ConditionalComponent isValid={!!error}>
                 <Text style={styles.errorText}>{error}</Text>
               </ConditionalComponent>
 
-              <View style={styles.inputContainer}>
-                <Input
-                  label="Nom du document"
-                  value={formData.nom}
-                  onChangeText={(value) => handleInputChange("nom", value)}
-                  placeholder="Ex: Contrat de transport scolaire"
-                  error={errors.nom}
-                  rightIcon="document-text"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.typeLabel}>Type de document</Text>
-                <View style={styles.typeOptions}>
-                  {documentTypes.map((type) => (
-                    <TouchableOpacity
-                      key={type}
-                      style={[
-                        styles.typeOption,
-                        formData.type === type && styles.typeOptionSelected,
-                      ]}
-                      onPress={() => handleTypeSelect(type)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.typeContent}>
-                        <View
-                          style={[
-                            styles.radioDot,
-                            formData.type === type && styles.radioDotSelected,
-                          ]}
-                        />
-                        <Text
-                          style={[
-                            styles.typeOptionText,
-                            formData.type === type &&
-                              styles.typeOptionTextSelected,
-                          ]}
-                        >
-                          {type}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Input
-                  label="Description (optionnel)"
-                  value={formData.description}
-                  onChangeText={(value) =>
-                    handleInputChange("description", value)
-                  }
-                  placeholder="Description du document"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Input
-                  label="Observations (optionnel)"
-                  value={formData.observations}
-                  onChangeText={(value) =>
-                    handleInputChange("observations", value)
-                  }
-                  placeholder="Remarques ou commentaires"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-            </View>
-
-            <View style={styles.card}>
               <View style={styles.fileSection}>
-                <Text style={styles.fileLabel}>
-                  Fichier <Text style={{ color: colors.error }}>*</Text>
-                </Text>
-
                 <ConditionalComponent isValid={!formData.file}>
                   <TouchableOpacity
                     style={[
@@ -483,9 +305,9 @@ export const DocumentUploadScreen: React.FC = () => {
                       style={styles.fileIcon}
                     />
                     <Text style={styles.fileSelectText}>Select a file</Text>
-                    <Text style={styles.fileSelectSubtext}>
-                      Téléchargez un document aux formats document ou image
-                      (PDF,Word,Jpg...)
+                    <Text style={styles.orText}>Ou</Text>
+                    <Text style={styles.dragDropText}>
+                      Glissez un documnet Ici
                     </Text>
                   </TouchableOpacity>
                   <ConditionalComponent isValid={!!errors.file}>
@@ -507,12 +329,19 @@ export const DocumentUploadScreen: React.FC = () => {
                         {formData.file?.name}
                       </Text>
                       <Text style={styles.selectedFileSize}>
+                        Taille:{" "}
                         {formData.file && formatFileSize(formData.file.size)}
                       </Text>
                     </View>
                     <TouchableOpacity
                       style={styles.removeFileButton}
-                      onPress={handleRemoveFile}
+                      onPress={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          file: undefined,
+                          nom: "",
+                        }))
+                      }
                     >
                       <Ionicons
                         name="close-circle"
@@ -524,25 +353,6 @@ export const DocumentUploadScreen: React.FC = () => {
                 </ConditionalComponent>
               </View>
             </View>
-
-            <ConditionalComponent
-              isValid={uploadProgress > 0 && uploadProgress < 100}
-            >
-              <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      { width: `${uploadProgress}%` },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.progressText}>
-                  Téléchargement... {uploadProgress}%
-                </Text>
-              </View>
-            </ConditionalComponent>
-
             <View style={styles.buttonContainer}>
               <Button
                 title="Envoyer par email"
@@ -550,12 +360,6 @@ export const DocumentUploadScreen: React.FC = () => {
                 loading={isLoading}
                 disabled={isLoading}
                 variant="primary"
-              />
-              <Button
-                title="Annuler"
-                onPress={() => router.back()}
-                variant="outline"
-                disabled={isLoading}
               />
             </View>
           </ScrollView>

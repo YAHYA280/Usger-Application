@@ -4,11 +4,8 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
-  Modal,
   Platform,
-  Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -23,8 +20,6 @@ import { Sidebar } from "../../../shared/components/ui/Sidebar";
 import { Document, DocumentCategory } from "../../../shared/types/document";
 import { useDocumentStore } from "../../../store/documentStore";
 import { DocumentCard } from "./components/DocumentCard";
-import { DocumentFilters, FilterState } from "./components/DocumentFilters";
-import { DocumentViewer } from "./components/DocumentViewer";
 
 const AnimatedDocumentCard: React.FC<{
   document: Document;
@@ -69,10 +64,6 @@ export const DocumentListScreen: React.FC = () => {
   const { colors } = useTheme();
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [showSortModal, setShowSortModal] = useState(false);
-  const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
-  const [viewerDocument, setViewerDocument] = useState<Document | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] =
     useState<DocumentCategory>("Actif");
@@ -84,10 +75,6 @@ export const DocumentListScreen: React.FC = () => {
     fetchDocuments,
     searchDocuments,
     setSelectedDocument,
-    setSortBy,
-    setFilters,
-    downloadDocument,
-    sortBy,
   } = useDocumentStore();
 
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -145,47 +132,6 @@ export const DocumentListScreen: React.FC = () => {
     setShowSidebar(false);
   };
 
-  const handleSortPress = () => {
-    setShowSortModal(true);
-  };
-
-  const handleSortSelect = (sort: typeof sortBy) => {
-    setSortBy(sort);
-    setShowSortModal(false);
-  };
-
-  const handleFiltersPress = () => {
-    setShowFiltersModal(true);
-  };
-
-  const handleApplyFilters = (filters: FilterState) => {
-    setFilters({
-      type: filters.types,
-      status: filters.statuses,
-      category: filters.categories,
-    });
-  };
-
-  const handleDocumentLongPress = (document: Document) => {
-    setViewerDocument(document);
-    setShowDocumentViewer(true);
-  };
-
-  const handleDownloadFromViewer = async () => {
-    if (viewerDocument) {
-      try {
-        await downloadDocument(viewerDocument.id);
-      } catch (error) {
-        // Error handled in store
-      }
-    }
-  };
-
-  const handleShareFromViewer = () => {
-    // Implement share functionality
-    alert("Fonctionnalité de partage à venir");
-  };
-
   const sidebarItems = [
     {
       id: "list",
@@ -203,19 +149,6 @@ export const DocumentListScreen: React.FC = () => {
       onPress: handleAddPress,
       isActive: false,
     },
-  ];
-
-  const sortOptions = [
-    { value: "date-creation-desc", label: "Date création (+ récent)" },
-    { value: "date-creation-asc", label: "Date création (+ ancien)" },
-    { value: "date-maj-desc", label: "Date modification (+ récent)" },
-    { value: "date-maj-asc", label: "Date modification (+ ancien)" },
-    { value: "nom-asc", label: "Nom (A-Z)" },
-    { value: "nom-desc", label: "Nom (Z-A)" },
-    { value: "type-asc", label: "Type (A-Z)" },
-    { value: "type-desc", label: "Type (Z-A)" },
-    { value: "status-asc", label: "Statut (A-Z)" },
-    { value: "status-desc", label: "Statut (Z-A)" },
   ];
 
   const renderEmptyState = () => (
@@ -322,52 +255,6 @@ export const DocumentListScreen: React.FC = () => {
       fontSize: 14,
       fontWeight: "500",
     },
-    sortModal: {
-      flex: 1,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      justifyContent: "flex-end",
-    },
-    sortModalContent: {
-      backgroundColor: colors.card,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingBottom: Platform.select({ ios: 34, android: 20, default: 20 }),
-      maxHeight: "70%",
-    },
-    sortModalHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    sortModalTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: colors.text,
-    },
-    sortModalClose: {
-      padding: 4,
-    },
-    sortOption: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    sortOptionText: {
-      flex: 1,
-      fontSize: 16,
-      color: colors.text,
-      marginLeft: 12,
-    },
-    sortOptionActive: {
-      backgroundColor: colors.primary + "10",
-    },
   });
 
   return (
@@ -396,14 +283,6 @@ export const DocumentListScreen: React.FC = () => {
             {
               icon: "search",
               onPress: handleSearchPress,
-            },
-            {
-              icon: "filter",
-              onPress: handleFiltersPress,
-            },
-            {
-              icon: "sort",
-              onPress: handleSortPress,
             },
             {
               icon: "bell",
@@ -496,76 +375,6 @@ export const DocumentListScreen: React.FC = () => {
         title="Gestion des documents"
         items={sidebarItems}
       />
-
-      <DocumentFilters
-        visible={showFiltersModal}
-        onClose={() => setShowFiltersModal(false)}
-        onApply={handleApplyFilters}
-      />
-
-      <DocumentViewer
-        visible={showDocumentViewer}
-        document={viewerDocument}
-        onClose={() => {
-          setShowDocumentViewer(false);
-          setViewerDocument(null);
-        }}
-        onDownload={handleDownloadFromViewer}
-        onShare={handleShareFromViewer}
-      />
-
-      <Modal
-        visible={showSortModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowSortModal(false)}
-      >
-        <Pressable
-          style={styles.sortModal}
-          onPress={() => setShowSortModal(false)}
-        >
-          <Pressable style={styles.sortModalContent}>
-            <View style={styles.sortModalHeader}>
-              <Text style={styles.sortModalTitle}>Trier par</Text>
-              <TouchableOpacity
-                style={styles.sortModalClose}
-                onPress={() => setShowSortModal(false)}
-              >
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView>
-              {sortOptions.map((option) => (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[
-                    styles.sortOption,
-                    sortBy === option.value && styles.sortOptionActive,
-                  ]}
-                  onPress={() =>
-                    handleSortSelect(option.value as typeof sortBy)
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name={
-                      sortBy === option.value
-                        ? "checkmark-circle"
-                        : "ellipse-outline"
-                    }
-                    size={24}
-                    color={
-                      sortBy === option.value ? colors.primary : colors.border
-                    }
-                  />
-                  <Text style={styles.sortOptionText}>{option.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 };

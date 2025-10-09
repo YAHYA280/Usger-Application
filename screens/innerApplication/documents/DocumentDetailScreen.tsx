@@ -16,7 +16,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
-import { Button } from "../../../shared/components/ui/Button";
 import { Header } from "../../../shared/components/ui/Header";
 import { useDocumentStore } from "../../../store/documentStore";
 
@@ -25,8 +24,14 @@ export const DocumentDetailScreen: React.FC = () => {
   const params = useLocalSearchParams();
   const documentId = params.id as string;
 
-  const { getDocumentById, deleteDocument, downloadDocument, isLoading } =
-    useDocumentStore();
+  const {
+    getDocumentById,
+    deleteDocument,
+    downloadDocument,
+    archiveDocument,
+    unarchiveDocument,
+    isLoading,
+  } = useDocumentStore();
   const document = getDocumentById(documentId);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -47,6 +52,22 @@ export const DocumentDetailScreen: React.FC = () => {
       Alert.alert("Succès", "Le document a été téléchargé avec succès");
     } catch (error) {
       Alert.alert("Erreur", "Impossible de télécharger le document");
+    }
+  };
+
+  const handleArchive = async () => {
+    setShowMenu(false);
+    try {
+      if (document?.category === "Actif") {
+        await archiveDocument(documentId);
+        Alert.alert("Succès", "Le document a été archivé");
+      } else {
+        await unarchiveDocument(documentId);
+        Alert.alert("Succès", "Le document a été désarchivé");
+      }
+      router.back();
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de modifier le document");
     }
   };
 
@@ -71,25 +92,6 @@ export const DocumentDetailScreen: React.FC = () => {
         },
       ]
     );
-  };
-
-  const handleShare = () => {
-    setShowMenu(false);
-    Alert.alert("Partager", "Fonctionnalité de partage à venir");
-  };
-
-  const getStatusColor = () => {
-    if (!document) return colors.textSecondary;
-    switch (document.status) {
-      case "En cours":
-        return colors.primary;
-      case "Validé":
-        return colors.success;
-      case "Expiré":
-        return colors.error;
-      default:
-        return colors.textSecondary;
-    }
   };
 
   const styles = StyleSheet.create({
@@ -122,13 +124,16 @@ export const DocumentDetailScreen: React.FC = () => {
       }),
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: "700",
+      fontSize: 16,
+      fontWeight: "600",
       color: colors.text,
-      marginBottom: 16,
+      marginBottom: 20,
     },
     detailRow: {
-      paddingVertical: 12,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
@@ -136,27 +141,105 @@ export const DocumentDetailScreen: React.FC = () => {
       borderBottomWidth: 0,
     },
     detailLabel: {
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: "600",
-      color: colors.textSecondary,
-      marginBottom: 4,
+      color: colors.text,
     },
     detailValue: {
       fontSize: 16,
-      color: colors.text,
+      color: colors.textSecondary,
+      textAlign: "right",
+      flex: 1,
+      marginLeft: 16,
     },
-    statusValue: {
+    observationsSection: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 16,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: colors.isDark ? 0.3 : 0.08,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 3,
+        },
+      }),
+    },
+    observationsTitle: {
       fontSize: 16,
       fontWeight: "600",
+      color: colors.text,
+      marginBottom: 12,
     },
     observationsValue: {
-      fontSize: 16,
-      color: colors.text,
-      lineHeight: 24,
+      fontSize: 15,
+      color: colors.textSecondary,
+      lineHeight: 22,
     },
-    buttonContainer: {
-      gap: 12,
-      marginTop: 16,
+    fileSection: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 16,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: colors.isDark ? 0.3 : 0.08,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 3,
+        },
+      }),
+    },
+    fileTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: 16,
+    },
+    fileCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.backgroundSecondary,
+      borderRadius: 12,
+      padding: 16,
+    },
+    fileIconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+      backgroundColor: colors.primary + "20",
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 16,
+    },
+    fileInfo: {
+      flex: 1,
+    },
+    fileName: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: 4,
+    },
+    fileDetails: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    downloadIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.text + "10",
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 12,
     },
     errorContainer: {
       flex: 1,
@@ -235,14 +318,13 @@ export const DocumentDetailScreen: React.FC = () => {
             icon: "chevron-left",
             onPress: () => router.back(),
           }}
-          title="Détails du document"
+          title="Détails document"
         />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Document introuvable</Text>
           <Text style={styles.errorSubtext}>
             Ce document n'existe pas ou a été supprimé.
           </Text>
-          <Button title="Retour" onPress={() => router.back()} />
         </View>
       </SafeAreaView>
     );
@@ -255,7 +337,7 @@ export const DocumentDetailScreen: React.FC = () => {
           icon: "chevron-left",
           onPress: () => router.back(),
         }}
-        title="Détails du document"
+        title="Détails document"
         rightIcons={[
           {
             icon: "ellipsis-v",
@@ -270,7 +352,14 @@ export const DocumentDetailScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informations générales</Text>
+            <Text style={styles.sectionTitle}>
+              Voici les détails de votre {document.type} du service
+            </Text>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Nom du document</Text>
+              <Text style={styles.detailValue}>{document.nom}</Text>
+            </View>
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Numéro du document</Text>
@@ -278,90 +367,57 @@ export const DocumentDetailScreen: React.FC = () => {
             </View>
 
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Nom</Text>
-              <Text style={styles.detailValue}>{document.nom}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Type</Text>
               <Text style={styles.detailValue}>{document.type}</Text>
             </View>
 
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Statut</Text>
-              <Text
-                style={[
-                  styles.detailValue,
-                  styles.statusValue,
-                  { color: getStatusColor() },
-                ]}
-              >
-                {document.status}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Catégorie</Text>
-              <Text style={styles.detailValue}>{document.category}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
+            <View style={[styles.detailRow, styles.lastDetailRow]}>
               <Text style={styles.detailLabel}>Date de création</Text>
               <Text style={styles.detailValue}>{document.dateCreation}</Text>
             </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Date de mise à jour</Text>
-              <Text style={styles.detailValue}>{document.dateMiseAJour}</Text>
-            </View>
-
-            <ConditionalComponent isValid={!!document.dateExpiration}>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Date d'expiration</Text>
-                <Text style={styles.detailValue}>
-                  {document.dateExpiration}
-                </Text>
-              </View>
-            </ConditionalComponent>
-
-            <View style={[styles.detailRow, styles.lastDetailRow]}>
-              <Text style={styles.detailLabel}>Taille du fichier</Text>
-              <Text style={styles.detailValue}>{document.fileSize}</Text>
-            </View>
           </View>
 
-          <ConditionalComponent isValid={!!document.description}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Description</Text>
-              <Text style={styles.observationsValue}>
-                {document.description}
-              </Text>
-            </View>
-          </ConditionalComponent>
-
           <ConditionalComponent isValid={!!document.observations}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Observations</Text>
+            <View style={styles.observationsSection}>
+              <Text style={styles.observationsTitle}>Observations</Text>
               <Text style={styles.observationsValue}>
                 {document.observations}
               </Text>
             </View>
           </ConditionalComponent>
 
-          <View style={styles.buttonContainer}>
-            <Button
-              title="Télécharger le document"
+          <View style={styles.fileSection}>
+            <Text style={styles.fileTitle}>Offre du service</Text>
+            <TouchableOpacity
+              style={styles.fileCard}
               onPress={handleDownload}
-              loading={isLoading}
+              activeOpacity={0.7}
               disabled={isLoading}
-              variant="primary"
-            />
-            <Button
-              title="Retour"
-              onPress={() => router.back()}
-              variant="outline"
-              disabled={isLoading}
-            />
+            >
+              <View style={styles.fileIconContainer}>
+                <Ionicons
+                  name="document-text"
+                  size={28}
+                  color={colors.primary}
+                />
+              </View>
+              <View style={styles.fileInfo}>
+                <Text style={styles.fileName} numberOfLines={1}>
+                  {document.nom}
+                </Text>
+                <Text style={styles.fileDetails}>
+                  modifié le {document.dateMiseAJour} • Taille:{" "}
+                  {document.fileSize}
+                </Text>
+              </View>
+              <View style={styles.downloadIcon}>
+                <Ionicons
+                  name="download-outline"
+                  size={20}
+                  color={colors.text}
+                />
+              </View>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </Animated.View>
@@ -391,13 +447,23 @@ export const DocumentDetailScreen: React.FC = () => {
 
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={handleShare}
+              onPress={handleArchive}
               activeOpacity={0.7}
             >
               <View style={styles.menuIcon}>
-                <Ionicons name="share-outline" size={20} color={colors.text} />
+                <Ionicons
+                  name={
+                    document.category === "Actif"
+                      ? "archive-outline"
+                      : "folder-open-outline"
+                  }
+                  size={20}
+                  color={colors.text}
+                />
               </View>
-              <Text style={styles.menuText}>Partager</Text>
+              <Text style={styles.menuText}>
+                {document.category === "Actif" ? "Archiver" : "Désarchiver"}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
