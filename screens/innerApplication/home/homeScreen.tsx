@@ -69,7 +69,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleGestionDocumentsPress = () => {
-    router.push("./gestion-documents");
+    router.push("./documents");
   };
 
   const styles = StyleSheet.create({

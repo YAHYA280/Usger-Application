@@ -302,14 +302,15 @@ export const AbsenceAddScreen: React.FC = () => {
                 />
               </TouchableOpacity>
 
-              {showDateDebutPicker && (
+              <ConditionalComponent isValid={Boolean(showDateDebutPicker)}>
+                {" "}
                 <DateTimePicker
                   value={dateDebut}
                   mode="date"
                   display={Platform.OS === "ios" ? "spinner" : "default"}
                   onChange={handleDateDebutChange}
                 />
-              )}
+              </ConditionalComponent>
 
               {/* Date de fin */}
               <TouchableOpacity
@@ -327,7 +328,7 @@ export const AbsenceAddScreen: React.FC = () => {
                 />
               </TouchableOpacity>
 
-              {showDateFinPicker && (
+              <ConditionalComponent isValid={Boolean(showDateFinPicker)}>
                 <DateTimePicker
                   value={dateFin}
                   mode="date"
@@ -335,7 +336,7 @@ export const AbsenceAddScreen: React.FC = () => {
                   onChange={handleDateFinChange}
                   minimumDate={dateDebut}
                 />
-              )}
+              </ConditionalComponent>
 
               {/* Trajets concernés */}
               <View style={styles.inputContainer}>

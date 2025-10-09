@@ -406,14 +406,14 @@ export const AbsenceEditScreen: React.FC = () => {
                 />
               </TouchableOpacity>
 
-              {showDateDebutPicker && (
+              <ConditionalComponent isValid={Boolean(showDateDebutPicker)}>
                 <DateTimePicker
                   value={dateDebut}
                   mode="date"
                   display={Platform.OS === "ios" ? "spinner" : "default"}
                   onChange={handleDateDebutChange}
                 />
-              )}
+              </ConditionalComponent>
 
               {/* Date de fin */}
               <TouchableOpacity
@@ -430,8 +430,7 @@ export const AbsenceEditScreen: React.FC = () => {
                   pointerEvents="none"
                 />
               </TouchableOpacity>
-
-              {showDateFinPicker && (
+              <ConditionalComponent isValid={Boolean(showDateFinPicker)}>
                 <DateTimePicker
                   value={dateFin}
                   mode="date"
@@ -439,7 +438,15 @@ export const AbsenceEditScreen: React.FC = () => {
                   onChange={handleDateFinChange}
                   minimumDate={dateDebut}
                 />
-              )}
+              </ConditionalComponent>
+
+              <DateTimePicker
+                value={dateFin}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleDateFinChange}
+                minimumDate={dateDebut}
+              />
 
               {/* Trajets concernés */}
               <View style={styles.inputContainer}>

@@ -278,6 +278,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="documents"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
