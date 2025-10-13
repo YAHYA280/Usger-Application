@@ -112,10 +112,6 @@ export const AbsenceListScreen: React.FC = () => {
     router.push("./absence/add");
   };
 
-  const handleNotificationPress = () => {
-    router.push("/notifications?returnTo=./absence");
-  };
-
   const handleMenuPress = () => {
     setShowSidebar(true);
   };
