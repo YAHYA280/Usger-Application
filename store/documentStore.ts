@@ -50,7 +50,6 @@ const applyFiltersAndSort = (
     );
   }
 
-  // Apply sorting
   filtered.sort((a, b) => {
     switch (sortBy) {
       case "nom-asc":
