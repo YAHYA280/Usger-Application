@@ -36,6 +36,14 @@ export const CreateEventScreen: React.FC = () => {
 
   const [applyToAllYear, setApplyToAllYear] = useState(false);
 
+  // Initialize currentDate from the date parameter
+  const [currentDate, setCurrentDate] = useState<Date>(() => {
+    if (date) {
+      return new Date(date);
+    }
+    return new Date();
+  });
+
   // Time states
   const [matinStartTime, setMatinStartTime] = useState("08:00");
   const [matinEndTime, setMatinEndTime] = useState("12:00");
@@ -56,20 +64,13 @@ export const CreateEventScreen: React.FC = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const [currentDay, setCurrentDay] = useState(0);
-
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
     }).start();
-
-    if (date) {
-      const selectedDate = new Date(date);
-      setCurrentDay(selectedDate.getDay());
-    }
-  }, [date]);
+  }, []);
 
   const getDayName = () => {
     const days = [
@@ -81,26 +82,28 @@ export const CreateEventScreen: React.FC = () => {
       "Vendredi",
       "Samedi",
     ];
-    return days[currentDay];
+    return days[currentDate.getDay()];
   };
 
   const getFormattedDate = () => {
-    if (!date) return "";
-    const selectedDate = new Date(date);
-    const day = selectedDate.getDate();
-    const month = selectedDate.getMonth() + 1;
-    const year = selectedDate.getFullYear();
+    const day = currentDate.getDate();
+    const month = currentDate.getMonth() + 1;
+    const year = currentDate.getFullYear();
     return `${day.toString().padStart(2, "0")}/${month
       .toString()
       .padStart(2, "0")}/${year}`;
   };
 
   const handlePreviousDay = () => {
-    setCurrentDay((prev) => (prev === 0 ? 6 : prev - 1));
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setCurrentDate(newDate);
   };
 
   const handleNextDay = () => {
-    setCurrentDay((prev) => (prev === 6 ? 0 : prev + 1));
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setCurrentDate(newDate);
   };
 
   const openTimePicker = (
@@ -133,10 +136,7 @@ export const CreateEventScreen: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!date) {
-      Alert.alert("Erreur", "Date invalide");
-      return;
-    }
+    const dateString = currentDate.toISOString().split("T")[0];
 
     if (!title) {
       Alert.alert("Erreur", "Veuillez ajouter un titre");
@@ -148,47 +148,72 @@ export const CreateEventScreen: React.FC = () => {
       return;
     }
 
-    try {
-      const dayOfWeek = getDayName() as any;
-      const timeSlots = [];
-
-      if (matinEnabled) {
-        timeSlots.push({
-          timeSlot: "Matin" as TimeSlot,
-          startTime: matinStartTime,
-          endTime: matinEndTime,
-          title: title,
-          description: description,
-          isActive: true,
-        });
-      }
-
-      if (soirEnabled) {
-        timeSlots.push({
-          timeSlot: "Soir" as TimeSlot,
-          startTime: soirStartTime,
-          endTime: soirEndTime,
-          title: title,
-          description: description,
-          isActive: true,
-        });
-      }
-
-      const schedule = [
+    // Show confirmation alert with the date
+    Alert.alert(
+      "Confirmer l'ajout",
+      `Voulez-vous vraiment ajouter un horaire à votre emploi du temps ?\n\nDate: ${getDayName()}, ${getFormattedDate()}\nTitre: ${title}`,
+      [
         {
-          day: dayOfWeek,
-          date: date,
-          timeSlots: timeSlots,
+          text: "Annuler",
+          style: "cancel",
         },
-      ];
+        {
+          text: "Enregistrer",
+          onPress: async () => {
+            try {
+              const dayOfWeek = getDayName() as any;
+              const timeSlots = [];
 
-      await addMultipleSlots(schedule);
+              if (matinEnabled) {
+                timeSlots.push({
+                  timeSlot: "Matin" as TimeSlot,
+                  startTime: matinStartTime,
+                  endTime: matinEndTime,
+                  title: title,
+                  description: description,
+                  isActive: true,
+                });
+              }
 
-      // Navigate back to calendar with success
-      router.back();
-    } catch (error) {
-      Alert.alert("Erreur", "Erreur lors de l'enregistrement");
-    }
+              if (soirEnabled) {
+                timeSlots.push({
+                  timeSlot: "Soir" as TimeSlot,
+                  startTime: soirStartTime,
+                  endTime: soirEndTime,
+                  title: title,
+                  description: description,
+                  isActive: true,
+                });
+              }
+
+              const schedule = [
+                {
+                  day: dayOfWeek,
+                  date: dateString,
+                  timeSlots: timeSlots,
+                },
+              ];
+
+              await addMultipleSlots(schedule);
+
+              // Show success message
+              Alert.alert(
+                "Succès",
+                `Horaire ajouté avec succès pour le ${getDayName()}, ${getFormattedDate()}`,
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.back(),
+                  },
+                ]
+              );
+            } catch (error) {
+              Alert.alert("Erreur", "Erreur lors de l'enregistrement");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleBack = () => {
