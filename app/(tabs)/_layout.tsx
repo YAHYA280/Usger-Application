@@ -284,6 +284,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="calendar-main"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

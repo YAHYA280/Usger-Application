@@ -26,8 +26,9 @@ export const CalendarAgendaScreen: React.FC = () => {
   const { date } = useLocalSearchParams<{ date: string }>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [showMenuForEvent, setShowMenuForEvent] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
-  const { events, setSelectedEvent, deleteEvent } = useCalendarStore();
+  const { events, deleteEvent } = useCalendarStore();
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -39,24 +40,15 @@ export const CalendarAgendaScreen: React.FC = () => {
 
   const getEventsForDate = () => {
     if (!date) return [];
-    // Filter events by the exact date
     return events.filter((event) => event.date === date);
   };
 
-  const handleEventPress = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    router.push(`/calendar/${event.id}`);
-  };
-
-  const handleViewEvent = (event: CalendarEvent) => {
-    setShowMenuForEvent(null);
-    setSelectedEvent(event);
-    router.push(`/calendar/${event.id}`);
+  const handleBack = () => {
+    router.back();
   };
 
   const handleEditEvent = (event: CalendarEvent) => {
     setShowMenuForEvent(null);
-    setSelectedEvent(event);
     Alert.alert("Modifier", "Fonctionnalité de modification à venir");
   };
 
@@ -83,7 +75,7 @@ export const CalendarAgendaScreen: React.FC = () => {
   };
 
   const handleNotificationPress = () => {
-    router.push("/notifications?returnTo=/calendar/agenda");
+    router.push("/notifications");
   };
 
   const selectedDateEvents = getEventsForDate();
@@ -270,9 +262,11 @@ export const CalendarAgendaScreen: React.FC = () => {
       fontSize: 16,
       fontWeight: "700",
       flex: 1,
+      marginRight: 8,
     },
     menuButton: {
       padding: 4,
+      marginLeft: 8,
     },
     eventDetails: {
       gap: 4,
@@ -310,15 +304,12 @@ export const CalendarAgendaScreen: React.FC = () => {
     menuModal: {
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",
-      justifyContent: "flex-start",
-      alignItems: "flex-end",
     },
     menuContainer: {
       backgroundColor: colors.card,
       borderRadius: 12,
-      marginTop: 140,
-      marginRight: 16,
       minWidth: 180,
+      maxWidth: 200,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
@@ -376,7 +367,7 @@ export const CalendarAgendaScreen: React.FC = () => {
               style={[styles.dayItem, isSelected && styles.selectedDayItem]}
               onPress={() => {
                 const newDate = day.toISOString().split("T")[0];
-                router.setParams({ date: newDate });
+                router.push(`/calendar/agenda?date=${newDate}`);
               }}
               activeOpacity={0.7}
             >
@@ -400,121 +391,90 @@ export const CalendarAgendaScreen: React.FC = () => {
     );
   };
 
-  const renderEventItem = (event: CalendarEvent) => (
-    <View key={event.id} style={styles.timeSlotRow}>
-      <View style={styles.timeColumn}>
-        <Text style={styles.timeText}>{event.startTime}</Text>
-        <Text style={styles.timeSubText}>{event.endTime}</Text>
-      </View>
+  const renderEventItem = (event: CalendarEvent) => {
+    const menuButtonRef = useRef<View>(null);
 
-      <View style={styles.eventColumn}>
-        <TouchableOpacity
-          style={[
-            styles.eventCard,
-            {
-              backgroundColor: event.color + "20",
-              borderLeftColor: event.color,
-            },
-          ]}
-          onPress={() => handleEventPress(event)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.eventHeader}>
-            <Text style={[styles.eventTitle, { color: event.color }]}>
-              {event.title}
-            </Text>
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={() => setShowMenuForEvent(event.id)}
-            >
-              <FontAwesome name="ellipsis-v" size={16} color={event.color} />
-            </TouchableOpacity>
-          </View>
+    const handleMenuPress = (e: any) => {
+      e.stopPropagation();
+      if (menuButtonRef.current) {
+        menuButtonRef.current.measure((fx, fy, width, height, px, py) => {
+          setMenuPosition({ x: px, y: py + height });
+          setShowMenuForEvent(event.id);
+        });
+      }
+    };
 
-          <View style={styles.eventDetails}>
-            <View style={styles.eventDetailRow}>
-              <FontAwesome name="tag" size={12} color={event.color} />
-              <Text style={[styles.eventDetailText, { color: event.color }]}>
-                {event.category}
-              </Text>
-            </View>
+    return (
+      <View key={event.id} style={styles.timeSlotRow}>
+        <View style={styles.timeColumn}>
+          <Text style={styles.timeText}>{event.startTime}</Text>
+          <Text style={styles.timeSubText}>{event.endTime}</Text>
+        </View>
 
-            <View style={styles.eventDetailRow}>
-              <FontAwesome name="clock-o" size={12} color={event.color} />
-              <Text style={[styles.eventDetailText, { color: event.color }]}>
-                {event.timeSlot}
-              </Text>
-            </View>
-
-            <View style={styles.eventDetailRow}>
-              <FontAwesome name="info-circle" size={12} color={event.color} />
-              <Text style={[styles.eventDetailText, { color: event.color }]}>
-                {event.status}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        <Modal
-          visible={showMenuForEvent === event.id}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowMenuForEvent(null)}
-        >
-          <Pressable
-            style={styles.menuModal}
-            onPress={() => setShowMenuForEvent(null)}
+        <View style={styles.eventColumn}>
+          <View
+            style={[
+              styles.eventCard,
+              {
+                backgroundColor: event.color + "20",
+                borderLeftColor: event.color,
+              },
+            ]}
           >
-            <Pressable style={styles.menuContainer}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => handleViewEvent(event)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.menuIcon}>
-                  <FontAwesome name="eye" size={18} color={colors.text} />
-                </View>
-                <Text style={styles.menuText}>Voir</Text>
-              </TouchableOpacity>
+            <View style={styles.eventHeader}>
+              <Text style={[styles.eventTitle, { color: event.color }]}>
+                {event.title}
+              </Text>
+              <View ref={menuButtonRef} collapsable={false}>
+                <TouchableOpacity
+                  style={styles.menuButton}
+                  onPress={handleMenuPress}
+                >
+                  <FontAwesome
+                    name="ellipsis-v"
+                    size={16}
+                    color={event.color}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => handleEditEvent(event)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.menuIcon}>
-                  <FontAwesome name="edit" size={18} color={colors.text} />
-                </View>
-                <Text style={styles.menuText}>Modifier</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.menuItem, styles.lastMenuItem]}
-                onPress={() => handleDeleteEvent(event)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.menuIcon}>
-                  <FontAwesome name="trash" size={18} color={colors.error} />
-                </View>
-                <Text style={[styles.menuText, styles.menuTextDelete]}>
-                  Supprimer
+            <View style={styles.eventDetails}>
+              <View style={styles.eventDetailRow}>
+                <FontAwesome name="tag" size={12} color={event.color} />
+                <Text style={[styles.eventDetailText, { color: event.color }]}>
+                  {event.category}
                 </Text>
-              </TouchableOpacity>
-            </Pressable>
-          </Pressable>
-        </Modal>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <FontAwesome name="clock-o" size={12} color={event.color} />
+                <Text style={[styles.eventDetailText, { color: event.color }]}>
+                  {event.timeSlot}
+                </Text>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <FontAwesome name="info-circle" size={12} color={event.color} />
+                <Text style={[styles.eventDetailText, { color: event.color }]}>
+                  {event.status}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <Header
         leftIcon={{
           icon: "chevron-left",
-          onPress: () => router.push("/calendar"),
+          onPress: handleBack,
         }}
-        title="Agenda du jour 🔥!"
+        title="Agenda du jour"
         rightIcons={[
           {
             icon: "bell",
@@ -564,6 +524,65 @@ export const CalendarAgendaScreen: React.FC = () => {
           </ScrollView>
         </View>
       </Animated.View>
+
+      {showMenuForEvent && (
+        <Modal
+          visible={true}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowMenuForEvent(null)}
+        >
+          <Pressable
+            style={styles.menuModal}
+            onPress={() => setShowMenuForEvent(null)}
+          >
+            <View
+              style={[
+                styles.menuContainer,
+                {
+                  position: "absolute",
+                  top: menuPosition.y,
+                  right: 16,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => {
+                  const event = selectedDateEvents.find(
+                    (e) => e.id === showMenuForEvent
+                  );
+                  if (event) handleEditEvent(event);
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuIcon}>
+                  <FontAwesome name="edit" size={18} color={colors.text} />
+                </View>
+                <Text style={styles.menuText}>Modifier</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.menuItem, styles.lastMenuItem]}
+                onPress={() => {
+                  const event = selectedDateEvents.find(
+                    (e) => e.id === showMenuForEvent
+                  );
+                  if (event) handleDeleteEvent(event);
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuIcon}>
+                  <FontAwesome name="trash" size={18} color={colors.error} />
+                </View>
+                <Text style={[styles.menuText, styles.menuTextDelete]}>
+                  Supprimer
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };

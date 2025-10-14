@@ -231,7 +231,7 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
             timeSlot: "Après-midi",
             startTime: "14:30",
             endTime: "16:00",
-            date: formatDate(addDays(today, 17)),
+            date: formatDate(addDays(today, 15)),
             color: "#f59e0b",
             status: "À venir",
             reminders: ["1hour"],

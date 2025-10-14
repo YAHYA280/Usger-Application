@@ -90,6 +90,10 @@ export const AbsenceListScreen: React.FC = () => {
     router.push(`./absence/${absence.id}`);
   };
 
+  const handleNotificationPress = () => {
+    router.push("/notifications?returnTo=/calendar/agenda");
+  };
+
   const handleRefresh = () => {
     fetchAbsences();
   };

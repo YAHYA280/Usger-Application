@@ -39,12 +39,9 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
     let startHour = 8;
     let endHour = 12;
 
-    if (slot === "Après-midi") {
-      startHour = 13;
-      endHour = 17;
-    } else if (slot === "Soir") {
-      startHour = 18;
-      endHour = 21;
+    if (slot === "Soir") {
+      startHour = 14;
+      endHour = 20;
     }
 
     for (let hour = startHour; hour <= endHour; hour++) {

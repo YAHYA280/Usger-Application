@@ -3,6 +3,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Platform,
   ScrollView,
@@ -38,14 +39,11 @@ export const CreateEventScreen: React.FC = () => {
   // Time states
   const [matinStartTime, setMatinStartTime] = useState("08:00");
   const [matinEndTime, setMatinEndTime] = useState("12:00");
-  const [midiStartTime, setMidiStartTime] = useState("13:00");
-  const [midiEndTime, setMidiEndTime] = useState("17:00");
-  const [soirStartTime, setSoirStartTime] = useState("18:00");
-  const [soirEndTime, setSoirEndTime] = useState("21:00");
+  const [soirStartTime, setSoirStartTime] = useState("13:00");
+  const [soirEndTime, setSoirEndTime] = useState("20:00");
 
   // Track which slots are enabled
   const [matinEnabled, setMatinEnabled] = useState(false);
-  const [midiEnabled, setMidiEnabled] = useState(false);
   const [soirEnabled, setSoirEnabled] = useState(false);
 
   // Time picker state
@@ -123,15 +121,7 @@ export const CreateEventScreen: React.FC = () => {
         setMatinEndTime(time);
         setMatinEnabled(true);
       }
-    } else if (slot === "Après-midi") {
-      if (type === "start") {
-        setMidiStartTime(time);
-        setMidiEnabled(true);
-      } else {
-        setMidiEndTime(time);
-        setMidiEnabled(true);
-      }
-    } else {
+    } else if (slot === "Soir") {
       if (type === "start") {
         setSoirStartTime(time);
         setSoirEnabled(true);
@@ -144,17 +134,17 @@ export const CreateEventScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!date) {
-      alert("Date invalide");
+      Alert.alert("Erreur", "Date invalide");
       return;
     }
 
     if (!title) {
-      alert("Veuillez ajouter un titre");
+      Alert.alert("Erreur", "Veuillez ajouter un titre");
       return;
     }
 
     if (!matinEnabled && !soirEnabled) {
-      alert("Veuillez ajouter au moins un horaire");
+      Alert.alert("Erreur", "Veuillez ajouter au moins un horaire");
       return;
     }
 
@@ -193,10 +183,16 @@ export const CreateEventScreen: React.FC = () => {
       ];
 
       await addMultipleSlots(schedule);
-      router.push("/calendar");
+
+      // Navigate back to calendar with success
+      router.back();
     } catch (error) {
-      alert("Erreur lors de l'enregistrement");
+      Alert.alert("Erreur", "Erreur lors de l'enregistrement");
     }
+  };
+
+  const handleBack = () => {
+    router.back();
   };
 
   const styles = StyleSheet.create({
@@ -397,8 +393,6 @@ export const CreateEventScreen: React.FC = () => {
   ) => {
     if (slot === "Matin") {
       return type === "start" ? matinStartTime : matinEndTime;
-    } else if (slot === "Après-midi") {
-      return type === "start" ? midiStartTime : midiEndTime;
     } else {
       return type === "start" ? soirStartTime : soirEndTime;
     }
@@ -479,7 +473,7 @@ export const CreateEventScreen: React.FC = () => {
       <Header
         leftIcon={{
           icon: "chevron-left",
-          onPress: () => router.back(),
+          onPress: handleBack,
         }}
         title="Saisie d'horaire"
       />
@@ -545,16 +539,6 @@ export const CreateEventScreen: React.FC = () => {
                   multiline
                   numberOfLines={3}
                 />
-                <TouchableOpacity
-                  style={styles.addTimeButton}
-                  onPress={() => {}}
-                  activeOpacity={0.7}
-                >
-                  <FontAwesome name="plus" size={12} color={colors.primary} />
-                  <Text style={styles.addTimeText}>
-                    Ajouter un titre ou une description
-                  </Text>
-                </TouchableOpacity>
               </View>
             </View>
           </View>
