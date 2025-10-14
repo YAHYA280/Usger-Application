@@ -159,7 +159,6 @@ export const Header: React.FC<HeaderProps> = ({
       alignItems: "flex-start",
     },
     rightSection: {
-      width: 100,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-end",
@@ -168,7 +167,8 @@ export const Header: React.FC<HeaderProps> = ({
     titleContainer: {
       flex: 1,
       alignItems: "flex-start",
-      paddingHorizontal: 30,
+      paddingLeft: 30,
+      paddingRight: rightIcons.length > 0 ? 16 : 30,
     },
     titleContainerHome: {
       flex: 1,
