@@ -30,7 +30,7 @@ const initialState: CalendarState = {
 
 function getStartOfWeek(date: Date): Date {
   const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(date.setDate(diff));
 }
 
@@ -40,19 +40,22 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
+function formatDate(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
 export const useCalendarStore = create<CalendarState & CalendarActions>(
   (set, get) => ({
     ...initialState,
 
-    // Event management
     fetchEvents: async () => {
       set({ isLoading: true, error: null });
       try {
-        // Simulate API call - replace with actual API
         await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Mock data
+        const today = new Date();
         const mockEvents: CalendarEvent[] = [
+          // Cette semaine
           {
             id: "1",
             title: "Cours de mathématiques",
@@ -61,6 +64,7 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
             timeSlot: "Matin",
             startTime: "08:00",
             endTime: "09:30",
+            date: formatDate(addDays(today, 1)),
             color: "#22c55e",
             status: "À venir",
             reminders: ["10min"],
@@ -69,13 +73,166 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
           },
           {
             id: "2",
-            title: "Sport",
+            title: "Sport - Football",
             category: "Sport",
             dayOfWeek: "Mardi",
             timeSlot: "Après-midi",
             startTime: "14:00",
             endTime: "15:30",
+            date: formatDate(addDays(today, 2)),
             color: "#3b82f6",
+            status: "À venir",
+            reminders: ["1hour"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "3",
+            title: "Cours de piano",
+            category: "Musique",
+            dayOfWeek: "Mercredi",
+            timeSlot: "Soir",
+            startTime: "18:00",
+            endTime: "19:30",
+            date: formatDate(addDays(today, 3)),
+            color: "#06b6d4",
+            status: "À venir",
+            reminders: ["1hour"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "4",
+            title: "Cours de français",
+            category: "Cours",
+            dayOfWeek: "Jeudi",
+            timeSlot: "Matin",
+            startTime: "09:00",
+            endTime: "10:30",
+            date: formatDate(addDays(today, 4)),
+            color: "#22c55e",
+            status: "À venir",
+            reminders: ["10min"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "5",
+            title: "Natation",
+            category: "Sport",
+            dayOfWeek: "Vendredi",
+            timeSlot: "Après-midi",
+            startTime: "15:00",
+            endTime: "16:30",
+            date: formatDate(addDays(today, 5)),
+            color: "#3b82f6",
+            status: "À venir",
+            reminders: ["1hour"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          // Semaine prochaine
+          {
+            id: "6",
+            title: "Cours d'anglais",
+            category: "Cours",
+            dayOfWeek: "Lundi",
+            timeSlot: "Matin",
+            startTime: "08:30",
+            endTime: "10:00",
+            date: formatDate(addDays(today, 8)),
+            color: "#22c55e",
+            status: "À venir",
+            reminders: ["10min"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "7",
+            title: "Danse moderne",
+            category: "Activité",
+            dayOfWeek: "Mardi",
+            timeSlot: "Soir",
+            startTime: "19:00",
+            endTime: "20:30",
+            date: formatDate(addDays(today, 9)),
+            color: "#f59e0b",
+            status: "À venir",
+            reminders: ["1hour"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "8",
+            title: "Club de robotique",
+            category: "Activité",
+            dayOfWeek: "Mercredi",
+            timeSlot: "Après-midi",
+            startTime: "14:00",
+            endTime: "16:00",
+            date: formatDate(addDays(today, 10)),
+            color: "#f59e0b",
+            status: "À venir",
+            reminders: ["1hour"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "9",
+            title: "Cours de sciences",
+            category: "Cours",
+            dayOfWeek: "Jeudi",
+            timeSlot: "Matin",
+            startTime: "10:00",
+            endTime: "11:30",
+            date: formatDate(addDays(today, 11)),
+            color: "#22c55e",
+            status: "À venir",
+            reminders: ["10min"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "10",
+            title: "Basket-ball",
+            category: "Sport",
+            dayOfWeek: "Vendredi",
+            timeSlot: "Après-midi",
+            startTime: "16:00",
+            endTime: "17:30",
+            date: formatDate(addDays(today, 12)),
+            color: "#3b82f6",
+            status: "À venir",
+            reminders: ["1hour"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          // Dans 2 semaines
+          {
+            id: "11",
+            title: "Cours d'histoire",
+            category: "Cours",
+            dayOfWeek: "Lundi",
+            timeSlot: "Matin",
+            startTime: "09:00",
+            endTime: "10:30",
+            date: formatDate(addDays(today, 15)),
+            color: "#22c55e",
+            status: "À venir",
+            reminders: ["10min"],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "12",
+            title: "Atelier de peinture",
+            category: "Activité",
+            dayOfWeek: "Mercredi",
+            timeSlot: "Après-midi",
+            startTime: "14:30",
+            endTime: "16:00",
+            date: formatDate(addDays(today, 17)),
+            color: "#f59e0b",
             status: "À venir",
             reminders: ["1hour"],
             createdAt: new Date(),
@@ -157,7 +314,6 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
       }
     },
 
-    // Schedule management
     getWeekSchedule: (weekStart: Date) => {
       const schedule: DaySchedule[] = [];
       const events = get().events;
@@ -204,6 +360,7 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
                 timeSlot: slot.timeSlot,
                 startTime: slot.startTime,
                 endTime: slot.endTime,
+                date: daySchedule.date,
                 color: "#6b7280",
                 status: "À venir",
                 reminders: get().settings.defaultReminders,
@@ -221,7 +378,6 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
       }
     },
 
-    // Navigation
     setCurrentWeek: (date) => {
       set({ currentWeekStart: getStartOfWeek(date) });
     },
@@ -240,7 +396,6 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
       set({ currentWeekStart: getStartOfWeek(new Date()) });
     },
 
-    // Filters
     setFilters: (filters) => {
       set({ filters: { ...get().filters, ...filters } });
     },
@@ -288,7 +443,6 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
       get().applyFilters();
     },
 
-    // Selection and editing
     setSelectedEvent: (event) => {
       set({ selectedEvent: event, isEditMode: false, pendingChanges: {} });
     },
@@ -309,23 +463,18 @@ export const useCalendarStore = create<CalendarState & CalendarActions>(
       set({ isEditMode: false, pendingChanges: {} });
     },
 
-    // Settings
     updateSettings: (settings) => {
       set({ settings: { ...get().settings, ...settings } });
     },
 
-    // Export and sync
     exportSchedule: async () => {
-      // Implementation for export functionality
       console.log("Exporting schedule...");
     },
 
     syncCalendar: async () => {
-      // Implementation for sync functionality
       console.log("Syncing calendar...");
     },
 
-    // Utility
     getFilteredEvents: () => {
       return get().filteredEvents;
     },

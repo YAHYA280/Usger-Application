@@ -1,3 +1,4 @@
+// screens/innerApplication/calendar/components/CustomTimePicker.tsx
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -15,7 +16,7 @@ import { Button } from "../../../../shared/components/ui/Button";
 
 interface CustomTimePickerProps {
   visible: boolean;
-  timeSlot: string; // "Matin" | "Après-midi" | "Soir"
+  timeSlot: "Matin" | "Après-midi" | "Soir";
   selectedTime: string;
   onTimeSelect: (time: string) => void;
   onClose: () => void;
@@ -34,58 +35,26 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
   const [tempSelectedTime, setTempSelectedTime] = useState(selectedTime);
 
   const getTimeRange = (slot: string): string[] => {
-    switch (slot) {
-      case "Matin":
-        return [
-          "06:00",
-          "06:30",
-          "07:00",
-          "07:30",
-          "08:00",
-          "08:30",
-          "09:00",
-          "09:30",
-          "10:00",
-          "10:30",
-          "11:00",
-          "11:30",
-          "12:00",
-        ];
-      case "Après-midi":
-        return [
-          "12:00",
-          "12:30",
-          "13:00",
-          "13:30",
-          "14:00",
-          "14:30",
-          "15:00",
-          "15:30",
-          "16:00",
-          "16:30",
-          "17:00",
-          "17:30",
-          "18:00",
-        ];
-      case "Soir":
-        return [
-          "17:00",
-          "17:30",
-          "18:00",
-          "18:30",
-          "19:00",
-          "19:30",
-          "20:00",
-          "20:30",
-          "21:00",
-          "21:30",
-          "22:00",
-          "22:30",
-          "23:00",
-        ];
-      default:
-        return ["09:00"];
+    const times: string[] = [];
+    let startHour = 8;
+    let endHour = 12;
+
+    if (slot === "Après-midi") {
+      startHour = 13;
+      endHour = 17;
+    } else if (slot === "Soir") {
+      startHour = 18;
+      endHour = 21;
     }
+
+    for (let hour = startHour; hour <= endHour; hour++) {
+      times.push(`${hour.toString().padStart(2, "0")}:00`);
+      if (hour < endHour) {
+        times.push(`${hour.toString().padStart(2, "0")}:30`);
+      }
+    }
+
+    return times;
   };
 
   const timeOptions = getTimeRange(timeSlot);
@@ -115,7 +84,7 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
         <Text
           style={[
             styles.timeText,
-            { color: isSelected ? "white" : colors.text },
+            { color: isSelected ? "#ffffff" : colors.text },
           ]}
         >
           {item}

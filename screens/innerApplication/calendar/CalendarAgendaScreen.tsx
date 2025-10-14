@@ -39,7 +39,8 @@ export const CalendarAgendaScreen: React.FC = () => {
 
   const getEventsForDate = () => {
     if (!date) return [];
-    return events.filter(() => true);
+    // Filter events by the exact date
+    return events.filter((event) => event.date === date);
   };
 
   const handleEventPress = (event: CalendarEvent) => {
@@ -56,7 +57,6 @@ export const CalendarAgendaScreen: React.FC = () => {
   const handleEditEvent = (event: CalendarEvent) => {
     setShowMenuForEvent(null);
     setSelectedEvent(event);
-    // Navigate to edit screen - you can create this later
     Alert.alert("Modifier", "Fonctionnalité de modification à venir");
   };
 
@@ -433,29 +433,28 @@ export const CalendarAgendaScreen: React.FC = () => {
 
           <View style={styles.eventDetails}>
             <View style={styles.eventDetailRow}>
-              <FontAwesome name="building" size={12} color={event.color} />
+              <FontAwesome name="tag" size={12} color={event.color} />
               <Text style={[styles.eventDetailText, { color: event.color }]}>
-                École Soleil
+                {event.category}
               </Text>
             </View>
 
             <View style={styles.eventDetailRow}>
-              <FontAwesome name="user" size={12} color={event.color} />
+              <FontAwesome name="clock-o" size={12} color={event.color} />
               <Text style={[styles.eventDetailText, { color: event.color }]}>
-                Sophie-Sophie
+                {event.timeSlot}
               </Text>
             </View>
 
             <View style={styles.eventDetailRow}>
               <FontAwesome name="info-circle" size={12} color={event.color} />
               <Text style={[styles.eventDetailText, { color: event.color }]}>
-                Prévu
+                {event.status}
               </Text>
             </View>
           </View>
         </TouchableOpacity>
 
-        {/* Action Menu Modal */}
         <Modal
           visible={showMenuForEvent === event.id}
           transparent
@@ -467,7 +466,6 @@ export const CalendarAgendaScreen: React.FC = () => {
             onPress={() => setShowMenuForEvent(null)}
           >
             <Pressable style={styles.menuContainer}>
-              {/* Voir */}
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => handleViewEvent(event)}
@@ -479,7 +477,6 @@ export const CalendarAgendaScreen: React.FC = () => {
                 <Text style={styles.menuText}>Voir</Text>
               </TouchableOpacity>
 
-              {/* Modifier */}
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => handleEditEvent(event)}
@@ -491,7 +488,6 @@ export const CalendarAgendaScreen: React.FC = () => {
                 <Text style={styles.menuText}>Modifier</Text>
               </TouchableOpacity>
 
-              {/* Supprimer */}
               <TouchableOpacity
                 style={[styles.menuItem, styles.lastMenuItem]}
                 onPress={() => handleDeleteEvent(event)}

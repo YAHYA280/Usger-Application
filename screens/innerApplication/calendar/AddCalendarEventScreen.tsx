@@ -14,10 +14,12 @@ import { Calendar, DateData } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { Header } from "../../../shared/components/ui/Header";
+import { useCalendarStore } from "../../../store/calendarStore";
 
 export const AddCalendarEventScreen: React.FC = () => {
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { events } = useCalendarStore();
 
   const [selectedDate, setSelectedDate] = useState<string>("");
 
@@ -28,6 +30,53 @@ export const AddCalendarEventScreen: React.FC = () => {
       useNativeDriver: true,
     }).start();
   }, []);
+
+  const getMarkedDates = () => {
+    const marked: any = {};
+    const eventsByDate: Record<string, any[]> = {};
+
+    // Group events by date
+    events.forEach((event) => {
+      const eventDate = event.date;
+
+      if (!eventsByDate[eventDate]) {
+        eventsByDate[eventDate] = [];
+      }
+      eventsByDate[eventDate].push(event);
+    });
+
+    // Create markers for each date
+    Object.keys(eventsByDate).forEach((date) => {
+      const dayEvents = eventsByDate[date];
+      const uniqueColors = [...new Set(dayEvents.map((e) => e.color))].slice(
+        0,
+        3
+      );
+
+      const dots = uniqueColors.map((color) => ({
+        key: color,
+        color: color,
+        selectedDotColor: "#ffffff",
+      }));
+
+      marked[date] = {
+        dots: dots,
+        marked: true,
+      };
+    });
+
+    // Add selection marker
+    if (selectedDate) {
+      marked[selectedDate] = {
+        ...marked[selectedDate],
+        selected: true,
+        selectedColor: colors.primary,
+        selectedTextColor: "#ffffff",
+      };
+    }
+
+    return marked;
+  };
 
   const handleDayPress = (day: DateData) => {
     setSelectedDate(day.dateString);
@@ -58,14 +107,7 @@ export const AddCalendarEventScreen: React.FC = () => {
     textDayHeaderFontSize: 14,
   };
 
-  const markedDates = selectedDate
-    ? {
-        [selectedDate]: {
-          selected: true,
-          selectedColor: colors.primary,
-        },
-      }
-    : {};
+  const markedDates = getMarkedDates();
 
   const styles = StyleSheet.create({
     container: {
@@ -149,6 +191,7 @@ export const AddCalendarEventScreen: React.FC = () => {
               key={colors.isDark ? "dark" : "light"}
               onDayPress={handleDayPress}
               markedDates={markedDates}
+              markingType="multi-dot"
               theme={calendarTheme}
               enableSwipeMonths={true}
               hideExtraDays={false}

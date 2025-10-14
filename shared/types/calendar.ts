@@ -23,8 +23,9 @@ export interface CalendarEvent {
   category: EventCategory;
   dayOfWeek: DayOfWeek;
   timeSlot: TimeSlot;
-  startTime: string; // Format: "HH:mm"
-  endTime: string; // Format: "HH:mm"
+  startTime: string;
+  endTime: string;
+  date: string;
   location?: string;
   color: string;
   status: EventStatus;

@@ -41,7 +41,7 @@ export const CalendarScreen: React.FC = () => {
     const eventsByDate: Record<string, any[]> = {};
 
     events.forEach((event) => {
-      const eventDate = new Date().toISOString().split("T")[0];
+      const eventDate = event.date; // Use event.date instead of calculating
 
       if (!eventsByDate[eventDate]) {
         eventsByDate[eventDate] = [];
@@ -117,16 +117,6 @@ export const CalendarScreen: React.FC = () => {
       label: "Ajouter un horaire",
       icon: "plus" as const,
       onPress: handleAddPress,
-      isActive: false,
-    },
-    {
-      id: "settings",
-      label: "Paramètres",
-      icon: "cog" as const,
-      onPress: () => {
-        setShowSidebar(false);
-        router.push("/calendar/settings");
-      },
       isActive: false,
     },
   ];
