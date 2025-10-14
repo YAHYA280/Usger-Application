@@ -1,25 +1,16 @@
-// screens/innerApplication/calendar/CalendarScreen.tsx
-import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Platform, StyleSheet, View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { Button } from "../../../shared/components/ui/Button";
 import { Header } from "../../../shared/components/ui/Header";
-import { Sidebar } from "../../../shared/components/ui/Sidebar";
 import { useCalendarStore } from "../../../store/calendarStore";
 
 export const CalendarScreen: React.FC = () => {
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [showSidebar, setShowSidebar] = useState(false);
 
   const { events, fetchEvents } = useCalendarStore();
 
@@ -41,7 +32,7 @@ export const CalendarScreen: React.FC = () => {
     const eventsByDate: Record<string, any[]> = {};
 
     events.forEach((event) => {
-      const eventDate = event.date; // Use event.date instead of calculating
+      const eventDate = event.date;
 
       if (!eventsByDate[eventDate]) {
         eventsByDate[eventDate] = [];
@@ -89,37 +80,9 @@ export const CalendarScreen: React.FC = () => {
     router.push("/notifications?returnTo=/calendar");
   };
 
-  const handleMenuPress = () => {
-    setShowSidebar(true);
-  };
-
-  const handleCloseSidebar = () => {
-    setShowSidebar(false);
-  };
-
   const handleAddPress = () => {
-    setShowSidebar(false);
     router.push("/calendar/add");
   };
-
-  const sidebarItems = [
-    {
-      id: "calendar",
-      label: "Calendrier",
-      icon: "calendar" as const,
-      onPress: () => {
-        setShowSidebar(false);
-      },
-      isActive: true,
-    },
-    {
-      id: "add",
-      label: "Ajouter un horaire",
-      icon: "plus" as const,
-      onPress: handleAddPress,
-      isActive: false,
-    },
-  ];
 
   const calendarTheme = {
     backgroundColor: colors.surface,
@@ -151,64 +114,41 @@ export const CalendarScreen: React.FC = () => {
     },
     content: {
       flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 20,
     },
     calendarContainer: {
       backgroundColor: colors.surface,
-      marginHorizontal: 16,
-      marginTop: 8,
-      borderRadius: 16,
+      borderRadius: 20,
       overflow: "hidden",
+      marginBottom: 24,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: colors.isDark ? 0.3 : 0.12,
-          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: colors.isDark ? 0.4 : 0.15,
+          shadowRadius: 20,
         },
         android: {
-          elevation: 8,
+          elevation: 10,
         },
         web: {
           boxShadow: colors.isDark
-            ? "0 4px 16px rgba(0, 0, 0, 0.3)"
-            : "0 4px 16px rgba(0, 0, 0, 0.12)",
+            ? "0 6px 20px rgba(0, 0, 0, 0.4)"
+            : "0 6px 20px rgba(0, 0, 0, 0.15)",
         },
       }),
     },
-    fab: {
-      position: "absolute",
-      right: 20,
-      bottom: 20,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: colors.primary,
-      alignItems: "center",
-      justifyContent: "center",
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 8,
-        },
-        web: {
-          boxShadow: `0 4px 8px ${colors.primary}66`,
-        },
-      }),
+    buttonContainer: {
+      paddingHorizontal: 0,
     },
   });
 
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        leftIcon={{
-          icon: "bars",
-          onPress: handleMenuPress,
-        }}
+        variant="home"
         title="Calendrier"
         rightIcons={[
           {
@@ -232,27 +172,20 @@ export const CalendarScreen: React.FC = () => {
             hideExtraDays={false}
             firstDay={1}
             style={{
-              borderRadius: 16,
+              borderRadius: 20,
               overflow: "hidden",
             }}
           />
         </View>
+
+        <View style={styles.buttonContainer}>
+          <Button
+            title="Ajouter un horaire"
+            onPress={handleAddPress}
+            variant="primary"
+          />
+        </View>
       </Animated.View>
-
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push("/calendar/add")}
-        activeOpacity={0.8}
-      >
-        <FontAwesome name="plus" size={24} color="#ffffff" />
-      </TouchableOpacity>
-
-      <Sidebar
-        visible={showSidebar}
-        onClose={handleCloseSidebar}
-        title="Calendrier"
-        items={sidebarItems}
-      />
     </SafeAreaView>
   );
 };

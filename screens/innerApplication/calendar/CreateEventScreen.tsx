@@ -1,5 +1,6 @@
 // screens/innerApplication/calendar/CreateEventScreen.tsx
 import { FontAwesome } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -20,11 +21,10 @@ import { Header } from "../../../shared/components/ui/Header";
 import { Input } from "../../../shared/components/ui/Input";
 import { TimeSlot } from "../../../shared/types/calendar";
 import { useCalendarStore } from "../../../store/calendarStore";
-import { CustomTimePicker } from "./components/CustomTimePicker";
 
 type TimePickerState = {
   visible: boolean;
-  slot: "Matin" | "Après-midi" | "Soir";
+  slot: "Matin" | "Soir";
   type: "start" | "end";
 };
 
@@ -34,7 +34,7 @@ export const CreateEventScreen: React.FC = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const { addMultipleSlots, isLoading } = useCalendarStore();
 
-  const [applyToAllYear, setApplyToAllYear] = useState(false);
+  const [applyToAllSemester, setApplyToAllSemester] = useState(false);
 
   // Initialize currentDate from the date parameter
   const [currentDate, setCurrentDate] = useState<Date>(() => {
@@ -44,13 +44,29 @@ export const CreateEventScreen: React.FC = () => {
     return new Date();
   });
 
-  // Time states
-  const [matinStartTime, setMatinStartTime] = useState("08:00");
-  const [matinEndTime, setMatinEndTime] = useState("12:00");
-  const [soirStartTime, setSoirStartTime] = useState("13:00");
-  const [soirEndTime, setSoirEndTime] = useState("20:00");
+  // Time states - store as Date objects for DateTimePicker
+  const [matinStartTime, setMatinStartTime] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(8, 0, 0, 0);
+    return d;
+  });
+  const [matinEndTime, setMatinEndTime] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    return d;
+  });
+  const [soirStartTime, setSoirStartTime] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(12, 1, 0, 0);
+    return d;
+  });
+  const [soirEndTime, setSoirEndTime] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(18, 0, 0, 0);
+    return d;
+  });
 
-  // Track which slots are enabled
+  // Track which slots are enabled (user must select slot first)
   const [matinEnabled, setMatinEnabled] = useState(false);
   const [soirEnabled, setSoirEnabled] = useState(false);
 
@@ -61,8 +77,11 @@ export const CreateEventScreen: React.FC = () => {
     type: "start",
   });
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  // Separate titles and descriptions for each slot
+  const [matinTitle, setMatinTitle] = useState("");
+  const [matinDescription, setMatinDescription] = useState("");
+  const [soirTitle, setSoirTitle] = useState("");
+  const [soirDescription, setSoirDescription] = useState("");
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -106,114 +125,225 @@ export const CreateEventScreen: React.FC = () => {
     setCurrentDate(newDate);
   };
 
-  const openTimePicker = (
-    slot: "Matin" | "Après-midi" | "Soir",
+  // Helper to format time from Date object
+  const formatTime = (date: Date) => {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
+  // Helper to validate time within slot boundaries
+  const validateTime = (
+    slot: "Matin" | "Soir",
+    time: Date,
     type: "start" | "end"
-  ) => {
+  ): Date => {
+    const hours = time.getHours();
+    const minutes = time.getMinutes();
+    const newDate = new Date();
+
+    if (slot === "Matin") {
+      // Matin: 8:00 - 12:00
+      if (hours < 8) {
+        newDate.setHours(8, 0, 0, 0);
+        return newDate;
+      } else if (hours > 12) {
+        newDate.setHours(12, 0, 0, 0);
+        return newDate;
+      } else if (hours === 12 && minutes > 0) {
+        newDate.setHours(12, 0, 0, 0);
+        return newDate;
+      }
+    } else if (slot === "Soir") {
+      // Soir: 12:01 - 18:00
+      if (hours < 12 || (hours === 12 && minutes === 0)) {
+        newDate.setHours(12, 1, 0, 0);
+        return newDate;
+      } else if (hours > 18) {
+        newDate.setHours(18, 0, 0, 0);
+        return newDate;
+      } else if (hours === 18 && minutes > 0) {
+        newDate.setHours(18, 0, 0, 0);
+        return newDate;
+      }
+    }
+
+    newDate.setHours(hours, minutes, 0, 0);
+    return newDate;
+  };
+
+  const openTimePicker = (slot: "Matin" | "Soir", type: "start" | "end") => {
     setTimePicker({ visible: true, slot, type });
   };
 
-  const handleTimeSelect = (time: string) => {
-    const { slot, type } = timePicker;
+  const handleTimeChange = (event: any, selectedDate?: Date) => {
+    // On Android, close picker after selection
+    if (Platform.OS === "android") {
+      setTimePicker({ ...timePicker, visible: false });
+    }
 
+    // Only update if user confirmed (not cancelled)
+    if (event.type === "dismissed") {
+      if (Platform.OS === "android") {
+        setTimePicker({ ...timePicker, visible: false });
+      }
+      return;
+    }
+
+    if (selectedDate) {
+      const { slot, type } = timePicker;
+      const validatedTime = validateTime(slot, selectedDate, type);
+
+      if (slot === "Matin") {
+        if (type === "start") {
+          setMatinStartTime(validatedTime);
+        } else {
+          setMatinEndTime(validatedTime);
+        }
+      } else if (slot === "Soir") {
+        if (type === "start") {
+          setSoirStartTime(validatedTime);
+        } else {
+          setSoirEndTime(validatedTime);
+        }
+      }
+    }
+  };
+
+  const closeTimePicker = () => {
+    setTimePicker({ ...timePicker, visible: false });
+  };
+
+  const handleEnableSlot = (slot: "Matin" | "Soir") => {
     if (slot === "Matin") {
-      if (type === "start") {
-        setMatinStartTime(time);
-        setMatinEnabled(true);
-      } else {
-        setMatinEndTime(time);
-        setMatinEnabled(true);
-      }
-    } else if (slot === "Soir") {
-      if (type === "start") {
-        setSoirStartTime(time);
-        setSoirEnabled(true);
-      } else {
-        setSoirEndTime(time);
-        setSoirEnabled(true);
-      }
+      setMatinEnabled(true);
+    } else {
+      setSoirEnabled(true);
+    }
+  };
+
+  const handleDisableSlot = (slot: "Matin" | "Soir") => {
+    if (slot === "Matin") {
+      setMatinEnabled(false);
+    } else {
+      setSoirEnabled(false);
     }
   };
 
   const handleSave = async () => {
-    const dateString = currentDate.toISOString().split("T")[0];
-
-    if (!title) {
-      Alert.alert("Erreur", "Veuillez ajouter un titre");
-      return;
-    }
-
+    // Validation sequence
     if (!matinEnabled && !soirEnabled) {
-      Alert.alert("Erreur", "Veuillez ajouter au moins un horaire");
+      Alert.alert("Erreur", "Veuillez d'abord sélectionner Matin ou Soir");
       return;
     }
 
-    // Show confirmation alert with the date
-    Alert.alert(
-      "Confirmer l'ajout",
-      `Voulez-vous vraiment ajouter un horaire à votre emploi du temps ?\n\nDate: ${getDayName()}, ${getFormattedDate()}\nTitre: ${title}`,
-      [
-        {
-          text: "Annuler",
-          style: "cancel",
-        },
-        {
-          text: "Enregistrer",
-          onPress: async () => {
-            try {
-              const dayOfWeek = getDayName() as any;
-              const timeSlots = [];
+    // Validate titles for enabled slots
+    if (matinEnabled && !matinTitle.trim()) {
+      Alert.alert("Erreur", "Veuillez ajouter un titre pour la période Matin");
+      return;
+    }
 
-              if (matinEnabled) {
-                timeSlots.push({
-                  timeSlot: "Matin" as TimeSlot,
-                  startTime: matinStartTime,
-                  endTime: matinEndTime,
-                  title: title,
-                  description: description,
-                  isActive: true,
-                });
+    if (soirEnabled && !soirTitle.trim()) {
+      Alert.alert("Erreur", "Veuillez ajouter un titre pour la période Soir");
+      return;
+    }
+
+    // Build confirmation message
+    let message = `Date: ${getDayName()}, ${getFormattedDate()}\n`;
+
+    if (matinEnabled) {
+      message += `\nMatin: ${matinTitle}`;
+    }
+    if (soirEnabled) {
+      message += `\nSoir: ${soirTitle}`;
+    }
+
+    if (applyToAllSemester) {
+      message += `\n\nCet horaire sera appliqué à tous les ${getDayName()}s du semestre.`;
+    }
+
+    // Show confirmation alert
+    Alert.alert("Confirmer l'ajout", message, [
+      {
+        text: "Annuler",
+        style: "cancel",
+      },
+      {
+        text: "Enregistrer",
+        onPress: async () => {
+          try {
+            const dayOfWeek = getDayName() as any;
+            const timeSlots = [];
+
+            if (matinEnabled) {
+              timeSlots.push({
+                timeSlot: "Matin" as TimeSlot,
+                startTime: formatTime(matinStartTime),
+                endTime: formatTime(matinEndTime),
+                title: matinTitle,
+                description: matinDescription,
+                isActive: true,
+              });
+            }
+
+            if (soirEnabled) {
+              timeSlots.push({
+                timeSlot: "Soir" as TimeSlot,
+                startTime: formatTime(soirStartTime),
+                endTime: formatTime(soirEndTime),
+                title: soirTitle,
+                description: soirDescription,
+                isActive: true,
+              });
+            }
+
+            if (applyToAllSemester) {
+              // Apply to all same days of the week for the semester (e.g., all Mondays)
+              const schedules = [];
+              const startOfSemester = new Date(currentDate);
+              const endOfSemester = new Date(currentDate);
+              endOfSemester.setMonth(endOfSemester.getMonth() + 4); // ~4 months semester
+
+              let iterDate = new Date(startOfSemester);
+              while (iterDate <= endOfSemester) {
+                if (iterDate.getDay() === currentDate.getDay()) {
+                  schedules.push({
+                    day: dayOfWeek,
+                    date: iterDate.toISOString().split("T")[0],
+                    timeSlots: timeSlots,
+                  });
+                }
+                iterDate.setDate(iterDate.getDate() + 1);
               }
 
-              if (soirEnabled) {
-                timeSlots.push({
-                  timeSlot: "Soir" as TimeSlot,
-                  startTime: soirStartTime,
-                  endTime: soirEndTime,
-                  title: title,
-                  description: description,
-                  isActive: true,
-                });
-              }
-
-              const schedule = [
+              await addMultipleSlots(schedules);
+              Alert.alert(
+                "Succès",
+                `Horaire ajouté pour ${schedules.length} ${getDayName()}(s) du semestre`,
+                [{ text: "OK", onPress: () => router.back() }]
+              );
+            } else {
+              // Add only for the selected date
+              const dateString = currentDate.toISOString().split("T")[0];
+              await addMultipleSlots([
                 {
                   day: dayOfWeek,
                   date: dateString,
                   timeSlots: timeSlots,
                 },
-              ];
-
-              await addMultipleSlots(schedule);
-
-              // Show success message
+              ]);
               Alert.alert(
                 "Succès",
                 `Horaire ajouté avec succès pour le ${getDayName()}, ${getFormattedDate()}`,
-                [
-                  {
-                    text: "OK",
-                    onPress: () => router.back(),
-                  },
-                ]
+                [{ text: "OK", onPress: () => router.back() }]
               );
-            } catch (error) {
-              Alert.alert("Erreur", "Erreur lors de l'enregistrement");
             }
-          },
+          } catch (error) {
+            Alert.alert("Erreur", "Erreur lors de l'enregistrement");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleBack = () => {
@@ -355,17 +485,58 @@ export const CreateEventScreen: React.FC = () => {
       color: colors.primary,
       fontWeight: "500",
     },
-    addTimeButton: {
+    timeButtonSelected: {
+      borderWidth: 2,
+      borderColor: colors.primary,
+      backgroundColor: colors.primary + "25",
+    },
+    inlinePickerContainer: {
+      marginTop: 12,
+      backgroundColor: colors.backgroundSecondary,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.primary + "30",
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: colors.isDark ? 0.3 : 0.1,
+          shadowRadius: 8,
+        },
+        android: {
+          elevation: 4,
+        },
+      }),
+    },
+    pickerLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.primary,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    inlinePicker: {
+      width: "100%",
+      marginBottom: 12,
+      height: 200,
+    },
+    enableButton: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 10,
-      gap: 8,
+      gap: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      backgroundColor: colors.primary + "15",
     },
-    addTimeText: {
+    enableButtonText: {
       fontSize: 13,
       color: colors.primary,
-      fontWeight: "500",
+      fontWeight: "600",
+    },
+    disableButton: {
+      padding: 4,
     },
     sectionTitle: {
       fontSize: 14,
@@ -412,10 +583,7 @@ export const CreateEventScreen: React.FC = () => {
     },
   });
 
-  const getCurrentTime = (
-    slot: "Matin" | "Après-midi" | "Soir",
-    type: "start" | "end"
-  ) => {
+  const getCurrentTime = (slot: "Matin" | "Soir", type: "start" | "end") => {
     if (slot === "Matin") {
       return type === "start" ? matinStartTime : matinEndTime;
     } else {
@@ -425,70 +593,129 @@ export const CreateEventScreen: React.FC = () => {
 
   const renderTimeSlot = (
     label: string,
-    slot: "Matin" | "Après-midi" | "Soir",
-    enabled: boolean
+    slot: "Matin" | "Soir",
+    enabled: boolean,
+    title: string,
+    setTitle: (text: string) => void,
+    description: string,
+    setDescription: (text: string) => void
   ) => (
     <View style={styles.timeSlotSection}>
       <View style={styles.timeSlotHeader}>
         <Text style={styles.timeSlotLabel}>{label}</Text>
-      </View>
-
-      <View style={styles.columnHeader}>
-        <Text style={styles.columnLabel}>Heure de début</Text>
-        <Text style={styles.columnLabel}>Heure de fin</Text>
-      </View>
-
-      <View style={styles.timeRow}>
-        <TouchableOpacity
-          style={[styles.timeButton, enabled && styles.timeButtonActive]}
-          onPress={() => openTimePicker(slot, "start")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.timeButtonText,
-              enabled && styles.timeButtonTextActive,
-            ]}
+        {!enabled ? (
+          <TouchableOpacity
+            style={styles.enableButton}
+            onPress={() => handleEnableSlot(slot)}
+            activeOpacity={0.7}
           >
-            {getCurrentTime(slot, "start")}
-          </Text>
-          <FontAwesome
-            name="clock-o"
-            size={14}
-            color={enabled ? colors.primary : colors.textSecondary}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.timeButton, enabled && styles.timeButtonActive]}
-          onPress={() => openTimePicker(slot, "end")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.timeButtonText,
-              enabled && styles.timeButtonTextActive,
-            ]}
+            <FontAwesome name="plus-circle" size={20} color={colors.primary} />
+            <Text style={styles.enableButtonText}>Activer</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.disableButton}
+            onPress={() => handleDisableSlot(slot)}
+            activeOpacity={0.7}
           >
-            {getCurrentTime(slot, "end")}
-          </Text>
-          <FontAwesome
-            name="clock-o"
-            size={14}
-            color={enabled ? colors.primary : colors.textSecondary}
-          />
-        </TouchableOpacity>
+            <FontAwesome name="times-circle" size={20} color={colors.error} />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {!enabled && (
-        <TouchableOpacity
-          style={styles.addTimeButton}
-          onPress={() => openTimePicker(slot, "start")}
-          activeOpacity={0.7}
-        >
-          <FontAwesome name="plus" size={12} color={colors.primary} />
-          <Text style={styles.addTimeText}>Ajouter une heure</Text>
-        </TouchableOpacity>
+      {enabled && (
+        <>
+          <View style={styles.columnHeader}>
+            <Text style={styles.columnLabel}>Heure de début</Text>
+            <Text style={styles.columnLabel}>Heure de fin</Text>
+          </View>
+
+          <View style={styles.timeRow}>
+            <TouchableOpacity
+              style={[
+                styles.timeButton,
+                styles.timeButtonActive,
+                timePicker.visible &&
+                  timePicker.slot === slot &&
+                  timePicker.type === "start" &&
+                  styles.timeButtonSelected,
+              ]}
+              onPress={() => openTimePicker(slot, "start")}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[styles.timeButtonText, styles.timeButtonTextActive]}
+              >
+                {formatTime(getCurrentTime(slot, "start"))}
+              </Text>
+              <FontAwesome name="clock-o" size={14} color={colors.primary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.timeButton,
+                styles.timeButtonActive,
+                timePicker.visible &&
+                  timePicker.slot === slot &&
+                  timePicker.type === "end" &&
+                  styles.timeButtonSelected,
+              ]}
+              onPress={() => openTimePicker(slot, "end")}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[styles.timeButtonText, styles.timeButtonTextActive]}
+              >
+                {formatTime(getCurrentTime(slot, "end"))}
+              </Text>
+              <FontAwesome name="clock-o" size={14} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {timePicker.visible && timePicker.slot === slot && (
+            <View style={styles.inlinePickerContainer}>
+              <Text style={styles.pickerLabel}>
+                {timePicker.type === "start"
+                  ? "Heure de début"
+                  : "Heure de fin"}
+              </Text>
+              <DateTimePicker
+                value={getCurrentTime(slot, timePicker.type)}
+                mode="time"
+                is24Hour={true}
+                display="spinner"
+                onChange={handleTimeChange}
+                textColor={colors.text}
+                style={styles.inlinePicker}
+              />
+              <Button
+                title="Confirmer"
+                onPress={closeTimePicker}
+                variant="primary"
+              />
+            </View>
+          )}
+
+          <View style={{ marginTop: 16 }}>
+            <Text style={styles.sectionTitle}>Titre et description</Text>
+            <View style={styles.inputContainer}>
+              <Input
+                placeholder="Ajoute un titre"
+                value={title}
+                onChangeText={setTitle}
+                variant="outlined"
+              />
+              <Input
+                placeholder="Description (optionnel)"
+                value={description}
+                onChangeText={setDescription}
+                variant="outlined"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+          </View>
+        </>
       )}
     </View>
   );
@@ -544,35 +771,31 @@ export const CreateEventScreen: React.FC = () => {
           </View>
 
           <View style={styles.formCard}>
-            {renderTimeSlot("Matin", "Matin", matinEnabled)}
-            {renderTimeSlot("Soir", "Soir", soirEnabled)}
-
-            <View style={{ marginTop: 20 }}>
-              <Text style={styles.sectionTitle}>Titre ou description</Text>
-              <View style={styles.inputContainer}>
-                <Input
-                  placeholder="Ajoute un titre"
-                  value={title}
-                  onChangeText={setTitle}
-                  variant="outlined"
-                />
-                <Input
-                  placeholder="Description (optionnel)"
-                  value={description}
-                  onChangeText={setDescription}
-                  variant="outlined"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-            </View>
+            {renderTimeSlot(
+              "Matin",
+              "Matin",
+              matinEnabled,
+              matinTitle,
+              setMatinTitle,
+              matinDescription,
+              setMatinDescription
+            )}
+            {renderTimeSlot(
+              "Soir",
+              "Soir",
+              soirEnabled,
+              soirTitle,
+              setSoirTitle,
+              soirDescription,
+              setSoirDescription
+            )}
           </View>
 
           <View style={styles.checkboxContainer}>
             <Checkbox
-              checked={applyToAllYear}
-              onPress={() => setApplyToAllYear(!applyToAllYear)}
-              label="Appliquer à tous les jours de l'année"
+              checked={applyToAllSemester}
+              onPress={() => setApplyToAllSemester(!applyToAllSemester)}
+              label={`Appliquer à tous les ${getDayName()}s du semestre`}
               size="medium"
             />
           </View>
@@ -586,16 +809,6 @@ export const CreateEventScreen: React.FC = () => {
         </ScrollView>
       </Animated.View>
 
-      <CustomTimePicker
-        visible={timePicker.visible}
-        timeSlot={timePicker.slot}
-        selectedTime={getCurrentTime(timePicker.slot, timePicker.type)}
-        onTimeSelect={handleTimeSelect}
-        onClose={() => setTimePicker({ ...timePicker, visible: false })}
-        title={`Sélectionner l'heure ${
-          timePicker.type === "start" ? "de début" : "de fin"
-        }`}
-      />
     </SafeAreaView>
   );
 };
