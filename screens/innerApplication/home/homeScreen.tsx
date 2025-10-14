@@ -17,6 +17,7 @@ export const HomeScreen: React.FC = () => {
     new Animated.Value(0),
     new Animated.Value(0),
     new Animated.Value(0),
+    new Animated.Value(0),
   ]).current;
 
   useEffect(() => {
@@ -52,12 +53,18 @@ export const HomeScreen: React.FC = () => {
     router.push("/notifications?returnTo=/(tabs)");
   };
 
-  const handleGestionTrajetsPress = () => {
-    router.push("./gestion-trajets");
+  const handlePlanningPress = () => {
+    // TODO: Add navigation route
+    console.log("Planning pressed");
+  };
+
+  const handleSuiviCoursesPress = () => {
+    // TODO: Add navigation route
+    console.log("Suivi des courses pressed");
   };
 
   const handleHoraireScolaritePress = () => {
-    router.push("./horaire-scolarite");
+    router.push("./calendar");
   };
 
   const handleHistoriqueTrajetsPress = () => {
@@ -144,12 +151,12 @@ export const HomeScreen: React.FC = () => {
             ]}
           >
             <HomeCard
-              title="Gestion des trajets"
-              description="Planifiez et gérez vos trajets et itinéraires quotidiens."
-              icon="road"
-              iconBackgroundColor="#8b5cf6"
+              title="Horaire de scolarité"
+              description="Consultez et gérez vos horaires scolaires et emploi du temps."
+              icon="calendar"
+              iconBackgroundColor="#3b82f6"
               backgroundColor={colors.card}
-              onPress={handleGestionTrajetsPress}
+              onPress={handleHoraireScolaritePress}
             />
           </Animated.View>
 
@@ -170,12 +177,12 @@ export const HomeScreen: React.FC = () => {
             ]}
           >
             <HomeCard
-              title="Horaire de scolarité"
-              description="Consultez et gérez vos horaires scolaires et emploi du temps."
-              icon="calendar"
-              iconBackgroundColor="#22c55e"
+              title="Planning"
+              description="Organisez et planifiez vos activités et rendez-vous."
+              icon="list-ul"
+              iconBackgroundColor="#8b5cf6"
               backgroundColor={colors.card}
-              onPress={handleHoraireScolaritePress}
+              onPress={handlePlanningPress}
             />
           </Animated.View>
 
@@ -187,6 +194,32 @@ export const HomeScreen: React.FC = () => {
                 transform: [
                   {
                     translateY: cardAnimations[2].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <HomeCard
+              title="Suivi des courses"
+              description="Suivez vos courses en temps réel et votre chauffeur."
+              icon="car"
+              iconBackgroundColor="#22c55e"
+              backgroundColor={colors.card}
+              onPress={handleSuiviCoursesPress}
+            />
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.cardWrapper,
+              {
+                opacity: cardAnimations[3],
+                transform: [
+                  {
+                    translateY: cardAnimations[3].interpolate({
                       inputRange: [0, 1],
                       outputRange: [30, 0],
                     }),
@@ -209,10 +242,10 @@ export const HomeScreen: React.FC = () => {
             style={[
               styles.cardWrapper,
               {
-                opacity: cardAnimations[3],
+                opacity: cardAnimations[4],
                 transform: [
                   {
-                    translateY: cardAnimations[3].interpolate({
+                    translateY: cardAnimations[4].interpolate({
                       inputRange: [0, 1],
                       outputRange: [30, 0],
                     }),
@@ -224,7 +257,7 @@ export const HomeScreen: React.FC = () => {
             <HomeCard
               title="Absence"
               description="Gérez vos absences, congés et demandes de permissions."
-              icon="calendar"
+              icon="calendar-times-o"
               iconBackgroundColor="#f59e0b"
               backgroundColor={colors.card}
               onPress={handleAbsencePress}
@@ -235,10 +268,10 @@ export const HomeScreen: React.FC = () => {
             style={[
               styles.cardWrapper,
               {
-                opacity: cardAnimations[4],
+                opacity: cardAnimations[5],
                 transform: [
                   {
-                    translateY: cardAnimations[4].interpolate({
+                    translateY: cardAnimations[5].interpolate({
                       inputRange: [0, 1],
                       outputRange: [30, 0],
                     }),
