@@ -1,4 +1,3 @@
-// screens/innerApplication/calendar/AddCalendarEventScreen.tsx
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -35,7 +34,6 @@ export const AddCalendarEventScreen: React.FC = () => {
     const marked: any = {};
     const eventsByDate: Record<string, any[]> = {};
 
-    // Group events by date
     events.forEach((event) => {
       const eventDate = event.date;
 
@@ -45,7 +43,6 @@ export const AddCalendarEventScreen: React.FC = () => {
       eventsByDate[eventDate].push(event);
     });
 
-    // Create markers for each date
     Object.keys(eventsByDate).forEach((date) => {
       const dayEvents = eventsByDate[date];
       const uniqueColors = [...new Set(dayEvents.map((e) => e.color))].slice(
@@ -65,7 +62,6 @@ export const AddCalendarEventScreen: React.FC = () => {
       };
     });
 
-    // Add selection marker
     if (selectedDate) {
       marked[selectedDate] = {
         ...marked[selectedDate],
@@ -80,7 +76,6 @@ export const AddCalendarEventScreen: React.FC = () => {
 
   const handleDayPress = (day: DateData) => {
     setSelectedDate(day.dateString);
-    // Navigate to the event creation screen with the selected date
     router.push(`/calendar/create-event?date=${day.dateString}`);
   };
 

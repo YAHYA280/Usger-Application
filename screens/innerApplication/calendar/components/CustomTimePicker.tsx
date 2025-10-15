@@ -1,4 +1,3 @@
-// screens/innerApplication/calendar/components/CustomTimePicker.tsx
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
