@@ -39,9 +39,7 @@ export const EmptyAgendaState: React.FC = () => {
         style={styles.icon}
       />
       <Text style={styles.title}>Aucun événement</Text>
-      <Text style={styles.text}>
-        Aucun événement prévu pour cette date.
-      </Text>
+      <Text style={styles.text}>Aucun événement prévu pour cette date.</Text>
     </View>
   );
 };
