@@ -55,7 +55,7 @@ export const HomeScreen: React.FC = () => {
 
   const handlePlanningPress = () => {
     // TODO: Add navigation route
-    console.log("Planning pressed");
+    router.push("./planification");
   };
 
   const handleSuiviCoursesPress = () => {

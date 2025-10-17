@@ -290,6 +290,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="planification"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

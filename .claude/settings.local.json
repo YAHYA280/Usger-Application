@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(for file in *.tsx)",
-      "Bash(do sed -i '1{/^\\/\\/ screens/d;}' \"$file\")",
-      "Bash(done)"
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
