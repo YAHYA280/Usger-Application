@@ -9,13 +9,13 @@ import {
 } from "react-native";
 import { useThemeColors } from "../../../../hooks/useTheme";
 import {
-  STATUS_COLORS,
-  TRAJET_COLORS,
-  Trajet,
+  Trip,
+  TRIP_TYPE_COLORS,
+  TRIP_STATUS_LABELS,
 } from "../../../../shared/types/planification";
 
 interface TrajetCardProps {
-  trajet: Trajet;
+  trajet: Trip;
   onPress: () => void;
 }
 
@@ -24,16 +24,31 @@ export const TrajetCard: React.FC<TrajetCardProps> = ({ trajet, onPress }) => {
 
   const getStatusIcon = () => {
     switch (trajet.status) {
-      case "Planifié":
+      case "prevu":
         return "calendar-outline";
-      case "En cours":
+      case "en_cours":
         return "time-outline";
-      case "Terminé":
+      case "termine":
         return "checkmark-circle-outline";
-      case "Annulé":
+      case "annule":
         return "close-circle-outline";
       default:
         return "calendar-outline";
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (trajet.status) {
+      case "prevu":
+        return colors.warning;
+      case "en_cours":
+        return colors.info;
+      case "termine":
+        return colors.success;
+      case "annule":
+        return colors.error;
+      default:
+        return colors.textSecondary;
     }
   };
 
@@ -45,7 +60,7 @@ export const TrajetCard: React.FC<TrajetCardProps> = ({ trajet, onPress }) => {
       marginHorizontal: 16,
       marginVertical: 6,
       borderLeftWidth: 4,
-      borderLeftColor: TRAJET_COLORS[trajet.type],
+      borderLeftColor: TRIP_TYPE_COLORS[trajet.type as keyof typeof TRIP_TYPE_COLORS],
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
@@ -159,17 +174,17 @@ export const TrajetCard: React.FC<TrajetCardProps> = ({ trajet, onPress }) => {
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: STATUS_COLORS[trajet.status] },
+            { backgroundColor: getStatusColor() },
           ]}
         >
           <Ionicons name={getStatusIcon() as any} size={12} color="#ffffff" />
-          <Text style={styles.statusText}>{trajet.status}</Text>
+          <Text style={styles.statusText}>{TRIP_STATUS_LABELS[trajet.status as keyof typeof TRIP_STATUS_LABELS]}</Text>
         </View>
       </View>
 
       <View style={styles.timeRow}>
         <Ionicons name="time-outline" size={16} color={colors.primary} />
-        <Text style={styles.timeText}>{trajet.time}</Text>
+        <Text style={styles.timeText}>{trajet.startTime} - {trajet.endTime}</Text>
       </View>
 
       <View style={styles.locationContainer}>
@@ -178,7 +193,7 @@ export const TrajetCard: React.FC<TrajetCardProps> = ({ trajet, onPress }) => {
             style={[styles.locationDot, { backgroundColor: colors.primary }]}
           />
           <Text style={styles.locationText} numberOfLines={1}>
-            {trajet.pickup.address}
+            {trajet.startLocation}
           </Text>
         </View>
         <View style={styles.locationRow}>
@@ -186,7 +201,7 @@ export const TrajetCard: React.FC<TrajetCardProps> = ({ trajet, onPress }) => {
             style={[styles.locationDot, { backgroundColor: colors.error }]}
           />
           <Text style={styles.locationText} numberOfLines={1}>
-            {trajet.dropoff.address}
+            {trajet.endLocation}
           </Text>
         </View>
       </View>
@@ -198,15 +213,15 @@ export const TrajetCard: React.FC<TrajetCardProps> = ({ trajet, onPress }) => {
             size={14}
             color={colors.textSecondary}
           />
-          <Text style={styles.driverText}>{trajet.driver.name}</Text>
+          <Text style={styles.driverText}>{trajet.driverName}</Text>
         </View>
         <View style={styles.infoChip}>
           <Ionicons
-            name="navigate-outline"
+            name="people-outline"
             size={12}
             color={colors.textSecondary}
           />
-          <Text style={styles.infoText}>{trajet.distance}</Text>
+          <Text style={styles.infoText}>{trajet.totalPassengers} passagers</Text>
         </View>
       </View>
     </TouchableOpacity>

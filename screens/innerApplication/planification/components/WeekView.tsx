@@ -1,3 +1,4 @@
+// screens/innerApplication/planification/components/WeekView.tsx
 import React from "react";
 import {
   Platform,
@@ -8,12 +9,12 @@ import {
   View,
 } from "react-native";
 import { useThemeColors } from "../../../../hooks/useTheme";
-import { Trajet } from "../../../../shared/types/planification";
+import { Trip } from "../../../../shared/types/planification";
 
 interface WeekViewProps {
-  selectedDate: Date;
-  trajets: Trajet[];
-  onDateSelect: (date: Date) => void;
+  selectedDate: string;
+  trajets: Trip[];
+  onDateSelect: (date: string) => void;
 }
 
 export const WeekView: React.FC<WeekViewProps> = ({
@@ -24,13 +25,14 @@ export const WeekView: React.FC<WeekViewProps> = ({
   const colors = useThemeColors();
 
   const getWeekDays = () => {
-    const currentDay = selectedDate.getDay();
+    const date = new Date(selectedDate);
+    const currentDay = date.getDay();
     const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
 
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
-      const day = new Date(selectedDate);
-      day.setDate(selectedDate.getDate() + mondayOffset + i);
+      const day = new Date(date);
+      day.setDate(date.getDate() + mondayOffset + i);
       weekDays.push(day);
     }
 
@@ -44,7 +46,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
 
   const dayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
   const weekDays = getWeekDays();
-  const selectedDateStr = selectedDate.toISOString().split("T")[0];
+  const selectedDateStr = selectedDate;
 
   const styles = StyleSheet.create({
     container: {
@@ -125,7 +127,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
               <TouchableOpacity
                 key={index}
                 style={styles.dayColumn}
-                onPress={() => onDateSelect(day)}
+                onPress={() => onDateSelect(day.toISOString().split('T')[0])}
                 activeOpacity={0.7}
               >
                 <View
@@ -156,11 +158,13 @@ export const WeekView: React.FC<WeekViewProps> = ({
                   {dayTrajets.length > 0 ? (
                     dayTrajets.slice(0, 3).map((trajet) => {
                       const color =
-                        trajet.type === "Aller"
+                        trajet.type === "ecole"
                           ? "#3b82f6"
-                          : trajet.type === "Retour"
+                          : trajet.type === "transport"
+                          ? "#22c55e"
+                          : trajet.type === "maintenance"
                           ? "#f59e0b"
-                          : "#8b5cf6";
+                          : "#6b7280";
                       return (
                         <View
                           key={trajet.id}

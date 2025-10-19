@@ -1,109 +1,145 @@
-export type TrajetType = "Aller" | "Retour" | "Aller-Retour";
-export type TrajetStatus = "Planifié" | "En cours" | "Terminé" | "Annulé";
-export type VehicleType = "Bus" | "Minibus" | "Voiture";
-
-export interface Trajet {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  type: TrajetType;
-  status: TrajetStatus;
-  driver: {
-    name: string;
-    phone: string;
-    photo?: string;
-  };
-  vehicle: {
-    type: VehicleType;
-    plateNumber: string;
-    capacity: number;
-  };
-  pickup: {
-    address: string;
-    time: string;
-    coordinates?: {
-      latitude: number;
-      longitude: number;
-    };
-  };
-  dropoff: {
-    address: string;
-    time: string;
-    coordinates?: {
-      latitude: number;
-      longitude: number;
-    };
-  };
-  distance: string;
-  duration: string;
-  price?: string;
-  passengers: number;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface PlanificationFilters {
-  searchQuery?: string;
-  trajetType?: TrajetType[];
-  status?: TrajetStatus[];
-  dateFrom?: Date;
-  dateTo?: Date;
-  driverName?: string;
-}
-
+// shared/types/planification.ts
+export type TripStatus = "prevu" | "en_cours" | "termine" | "annule";
+export type TripType = "ecole" | "transport" | "maintenance" | "autre";
 export type ViewMode = "month" | "week" | "day";
 
-export interface PlanificationState {
-  trajets: Trajet[];
-  filteredTrajets: Trajet[];
-  filters: PlanificationFilters;
-  viewMode: ViewMode;
-  selectedDate: Date;
-  selectedTrajet: Trajet | null;
+export interface TripStop {
+  id: string;
+  name: string;
+  address: string;
+  arrivalTime: string;
+  departureTime?: string;
+  passengers?: number;
+  type: "pickup" | "dropoff" | "intermediate";
+}
+
+export interface AssignedVehicle {
+  id: string;
+  plateNumber: string;
+  model: string;
+  brand: string;
+}
+
+export interface Trip {
+  id: string;
+  title: string;
+  type: TripType;
+  date: string; // YYYY-MM-DD format
+  startTime: string; // HH:MM format
+  endTime: string; // HH:MM format
+  status: TripStatus;
+  description?: string;
+
+  // Route information
+  startLocation: string;
+  endLocation: string;
+  stops: TripStop[];
+  estimatedDistance?: number; // in km
+  estimatedDuration?: number; // in minutes
+
+  // Vehicle and assignment
+  assignedVehicle?: AssignedVehicle;
+  driverId: string;
+  driverName: string;
+  driverPhone?: string;
+
+  // Passengers
+  totalPassengers: number;
+  confirmedPassengers: number;
+
+  // Additional info
+  notes?: string;
+  instructions?: string;
+  contactNumber?: string;
+
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+  canModify: boolean;
+  canCancel: boolean;
+}
+
+export interface PlanningFilters {
+  status?: TripStatus[];
+  type?: TripType[];
+  vehicleId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  searchQuery?: string;
+}
+
+export interface PlanningPreferences {
+  defaultView: "month" | "week" | "day" | "list";
+  showWeekNumbers: boolean;
+  startWeekOn: 0 | 1; // 0 for Sunday, 1 for Monday
+  autoRefresh: boolean;
+  reminderMinutes: number[];
+}
+
+export interface PlanningState {
+  trips: Trip[];
+  filteredTrips: Trip[];
+  filters: PlanningFilters;
+  preferences: PlanningPreferences;
+  selectedDate: string | null;
+  selectedTrip: Trip | null;
+  currentView: ViewMode;
   isLoading: boolean;
   error: string | null;
 }
 
-export interface PlanificationActions {
-  fetchTrajets: () => Promise<void>;
-  getTrajetById: (id: string) => Trajet | undefined;
-  addTrajet: (
-    trajet: Omit<Trajet, "id" | "createdAt" | "updatedAt">
+export interface PlanningActions {
+  // CRUD Operations
+  fetchTrips: (monthYear?: string) => Promise<void>;
+  fetchTripDetails: (id: string) => Promise<void>;
+  updateTripStatus: (
+    id: string,
+    status: TripStatus,
+    notes?: string
   ) => Promise<void>;
-  updateTrajet: (id: string, data: Partial<Trajet>) => Promise<void>;
-  deleteTrajet: (id: string) => Promise<void>;
 
-  setViewMode: (mode: ViewMode) => void;
-  setSelectedDate: (date: Date) => void;
-  setSelectedTrajet: (trajet: Trajet | null) => void;
-
-  setFilters: (filters: Partial<PlanificationFilters>) => void;
+  // Filters & View
+  setFilters: (filters: Partial<PlanningFilters>) => void;
   clearFilters: () => void;
-  applyFilters: () => void;
-  searchTrajets: (query: string) => void;
+  setCurrentView: (view: ViewMode) => void;
+  setSelectedDate: (date: string | null) => void;
+  selectTrip: (trip: Trip | null) => void;
 
-  getTrajetsForDate: (date: Date) => Trajet[];
-  getTrajetsForWeek: (weekStart: Date) => Trajet[];
-  getTrajetsForMonth: (month: number, year: number) => Trajet[];
-
-  goToNextPeriod: () => void;
-  goToPreviousPeriod: () => void;
-  goToToday: () => void;
-
+  // Utils
+  getFilteredTrips: () => Trip[];
+  getTripsForDate: (date: string) => Trip[];
+  getTripsForWeek: (startDate: string, endDate: string) => Trip[];
+  getUpcomingTrips: (limit?: number) => Trip[];
+  getTripCounts: () => {
+    total: number;
+    scheduled: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+  };
   clearError: () => void;
 }
 
-export const TRAJET_COLORS: Record<TrajetType, string> = {
-  Aller: "#3b82f6",
-  Retour: "#f59e0b",
-  "Aller-Retour": "#8b5cf6",
+// Color mapping for trip types
+export const TRIP_TYPE_COLORS: Record<TripType, string> = {
+  ecole: "#3b82f6", // Blue
+  transport: "#22c55e", // Green
+  maintenance: "#f59e0b", // Orange
+  autre: "#6b7280", // Gray
 };
 
-export const STATUS_COLORS: Record<TrajetStatus, string> = {
-  Planifié: "#06b6d4",
-  "En cours": "#22c55e",
-  Terminé: "#6b7280",
-  Annulé: "#ef4444",
+// Labels for trip types
+export const TRIP_TYPE_LABELS: Record<TripType, string> = {
+  ecole: "École",
+  transport: "Transport",
+  maintenance: "Maintenance",
+  autre: "Autre",
+};
+
+// Labels for trip status
+export const TRIP_STATUS_LABELS: Record<TripStatus, string> = {
+  prevu: "Prévu",
+  en_cours: "En cours",
+  termine: "Terminé",
+  annule: "Annulé",
 };

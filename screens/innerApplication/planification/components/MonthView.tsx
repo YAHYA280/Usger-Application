@@ -1,13 +1,14 @@
+// screens/innerApplication/planification/components/MonthView.tsx
 import React from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { useThemeColors } from "../../../../hooks/useTheme";
-import { Trajet } from "../../../../shared/types/planification";
+import { Trip } from "../../../../shared/types/planification";
 
 interface MonthViewProps {
-  selectedDate: Date;
-  trajets: Trajet[];
-  onDateSelect: (date: Date) => void;
+  selectedDate: string;
+  trajets: Trip[];
+  onDateSelect: (date: string) => void;
 }
 
 export const MonthView: React.FC<MonthViewProps> = ({
@@ -30,11 +31,13 @@ export const MonthView: React.FC<MonthViewProps> = ({
       }
 
       const typeColor =
-        trajet.type === "Aller"
+        trajet.type === "ecole"
           ? "#3b82f6"
-          : trajet.type === "Retour"
+          : trajet.type === "transport"
+          ? "#22c55e"
+          : trajet.type === "maintenance"
           ? "#f59e0b"
-          : "#8b5cf6";
+          : "#6b7280";
 
       marked[date].dots.push({
         key: trajet.id,
@@ -42,12 +45,11 @@ export const MonthView: React.FC<MonthViewProps> = ({
       });
     });
 
-    const selectedDateStr = selectedDate.toISOString().split("T")[0];
-    if (marked[selectedDateStr]) {
-      marked[selectedDateStr].selected = true;
-      marked[selectedDateStr].selectedColor = colors.primary;
+    if (marked[selectedDate]) {
+      marked[selectedDate].selected = true;
+      marked[selectedDate].selectedColor = colors.primary;
     } else {
-      marked[selectedDateStr] = {
+      marked[selectedDate] = {
         selected: true,
         selectedColor: colors.primary,
       };
@@ -57,7 +59,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
   };
 
   const handleDayPress = (day: DateData) => {
-    onDateSelect(new Date(day.dateString));
+    onDateSelect(day.dateString);
   };
 
   const calendarTheme = {
@@ -130,7 +132,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
       <View style={styles.container}>
         <Calendar
           key={colors.isDark ? "dark" : "light"}
-          current={selectedDate.toISOString().split("T")[0]}
+          current={selectedDate}
           onDayPress={handleDayPress}
           markedDates={getMarkedDates()}
           markingType="multi-dot"
@@ -144,15 +146,19 @@ export const MonthView: React.FC<MonthViewProps> = ({
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: "#3b82f6" }]} />
-          <Text style={styles.legendText}>Aller</Text>
+          <Text style={styles.legendText}>École</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: "#22c55e" }]} />
+          <Text style={styles.legendText}>Transport</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: "#f59e0b" }]} />
-          <Text style={styles.legendText}>Retour</Text>
+          <Text style={styles.legendText}>Maintenance</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: "#8b5cf6" }]} />
-          <Text style={styles.legendText}>Aller-Retour</Text>
+          <View style={[styles.legendDot, { backgroundColor: "#6b7280" }]} />
+          <Text style={styles.legendText}>Autre</Text>
         </View>
       </View>
     </View>

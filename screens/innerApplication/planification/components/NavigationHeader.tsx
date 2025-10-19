@@ -1,3 +1,4 @@
+// screens/innerApplication/planification/components/NavigationHeader.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -11,7 +12,7 @@ import { useThemeColors } from "../../../../hooks/useTheme";
 import { ViewMode } from "../../../../shared/types/planification";
 
 interface NavigationHeaderProps {
-  selectedDate: Date;
+  selectedDate: string;
   viewMode: ViewMode;
   onPrevious: () => void;
   onNext: () => void;
@@ -28,13 +29,15 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
   const colors = useThemeColors();
 
   const getHeaderTitle = () => {
+    const date = new Date(selectedDate);
+
     if (viewMode === "month") {
-      return selectedDate.toLocaleDateString("fr-FR", {
+      return date.toLocaleDateString("fr-FR", {
         month: "long",
         year: "numeric",
       });
     } else if (viewMode === "week") {
-      const weekStart = new Date(selectedDate);
+      const weekStart = new Date(date);
       const currentDay = weekStart.getDay();
       const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
       weekStart.setDate(weekStart.getDate() + mondayOffset);
@@ -49,7 +52,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
         year: "numeric",
       })}`;
     } else {
-      return selectedDate.toLocaleDateString("fr-FR", {
+      return date.toLocaleDateString("fr-FR", {
         day: "numeric",
         month: "long",
         year: "numeric",

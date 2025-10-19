@@ -1,3 +1,4 @@
+// screens/innerApplication/planification/components/ViewModeSelector.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -21,7 +22,7 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
 }) => {
   const colors = useThemeColors();
 
-  const modes: { value: ViewMode; label: string; icon: string }[] = [
+  const modes: { value: ViewMode; label: string; icon: any }[] = [
     { value: "month", label: "Mois", icon: "calendar" },
     { value: "week", label: "Semaine", icon: "calendar-outline" },
     { value: "day", label: "Jour", icon: "today" },

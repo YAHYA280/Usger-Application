@@ -1,163 +1,305 @@
+// store/planificationStore.ts
 import { create } from "zustand";
 import {
-  PlanificationActions,
-  PlanificationFilters,
-  PlanificationState,
-  Trajet,
+  PlanningActions,
+  PlanningFilters,
+  PlanningPreferences,
+  PlanningState,
+  Trip,
   ViewMode,
 } from "../shared/types/planification";
 
-type PlanificationStore = PlanificationState & PlanificationActions;
+type PlanificationStore = PlanningState &
+  PlanningActions & {
+    getUpcomingTrips: (limit?: number) => Trip[];
+    getTripsForWeek: (startDate: string, endDate: string) => Trip[];
+  };
 
-const applyFiltersTrajets = (
-  trajets: Trajet[],
-  filters: PlanificationFilters
-) => {
-  let filtered = [...trajets];
+// Helper function to apply filters
+const applyFiltersToTrips = (trips: Trip[], filters: PlanningFilters) => {
+  let filtered = [...trips];
 
+  // Filter by status
+  if (filters.status && filters.status.length > 0) {
+    filtered = filtered.filter((t) => filters.status!.includes(t.status));
+  }
+
+  // Filter by type
+  if (filters.type && filters.type.length > 0) {
+    filtered = filtered.filter((t) => filters.type!.includes(t.type));
+  }
+
+  // Filter by vehicle
+  if (filters.vehicleId) {
+    filtered = filtered.filter(
+      (t) => t.assignedVehicle?.id === filters.vehicleId
+    );
+  }
+
+  // Filter by search query
   if (filters.searchQuery && filters.searchQuery.trim() !== "") {
     const query = filters.searchQuery.toLowerCase().trim();
     filtered = filtered.filter(
-      (trajet) =>
-        trajet.title.toLowerCase().includes(query) ||
-        trajet.driver.name.toLowerCase().includes(query) ||
-        trajet.pickup.address.toLowerCase().includes(query) ||
-        trajet.dropoff.address.toLowerCase().includes(query)
+      (t) =>
+        t.title.toLowerCase().includes(query) ||
+        t.description?.toLowerCase().includes(query) ||
+        t.startLocation.toLowerCase().includes(query) ||
+        t.endLocation.toLowerCase().includes(query) ||
+        t.assignedVehicle?.plateNumber.toLowerCase().includes(query) ||
+        t.stops.some((stop) => stop.name.toLowerCase().includes(query))
     );
   }
 
-  if (filters.trajetType && filters.trajetType.length > 0) {
-    filtered = filtered.filter((trajet) =>
-      filters.trajetType!.includes(trajet.type)
-    );
-  }
-
-  if (filters.status && filters.status.length > 0) {
-    filtered = filtered.filter((trajet) =>
-      filters.status!.includes(trajet.status)
-    );
-  }
-
+  // Filter by date range
   if (filters.dateFrom) {
-    filtered = filtered.filter(
-      (trajet) => new Date(trajet.date) >= filters.dateFrom!
-    );
+    filtered = filtered.filter((t) => new Date(t.date) >= filters.dateFrom!);
   }
 
   if (filters.dateTo) {
-    filtered = filtered.filter(
-      (trajet) => new Date(trajet.date) <= filters.dateTo!
-    );
+    filtered = filtered.filter((t) => new Date(t.date) <= filters.dateTo!);
   }
 
-  if (filters.driverName && filters.driverName.trim() !== "") {
-    const driverQuery = filters.driverName.toLowerCase().trim();
-    filtered = filtered.filter((trajet) =>
-      trajet.driver.name.toLowerCase().includes(driverQuery)
-    );
-  }
-
-  return filtered.sort(
-    (a, b) =>
-      new Date(a.date + " " + a.time).getTime() -
-      new Date(b.date + " " + b.time).getTime()
-  );
+  // Sort by date and time
+  return filtered.sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.startTime}`);
+    const dateB = new Date(`${b.date}T${b.startTime}`);
+    return dateA.getTime() - dateB.getTime();
+  });
 };
 
-const mockTrajets: Trajet[] = [
+// Generate dates for current month and next month
+const generateDatesForMonth = (year: number, month: number) => {
+  const dates = [];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    dates.push(date.toISOString().split("T")[0]);
+  }
+
+  return dates;
+};
+
+// Get current date info
+const now = new Date();
+const currentYear = now.getFullYear();
+const currentMonth = now.getMonth();
+const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+
+// Generate dates for current and next month
+const currentMonthDates = generateDatesForMonth(currentYear, currentMonth);
+const nextMonthDates = generateDatesForMonth(nextMonthYear, nextMonth);
+
+// Vehicle assignments
+const vehicleAssignments = [
   {
-    id: "1",
-    title: "Trajet École - Maison",
-    date: "2025-10-20",
-    time: "08:00",
-    type: "Aller",
-    status: "Planifié",
-    driver: {
-      name: "David Jacques",
-      phone: "+212 6 12 34 56 78",
-    },
-    vehicle: {
-      type: "Bus",
-      plateNumber: "A 12345 B",
-      capacity: 45,
-    },
-    pickup: {
-      address: "Quartier Soleil",
-      time: "08:00",
-    },
-    dropoff: {
-      address: "École Soleil",
-      time: "08:30",
-    },
-    distance: "3 Km",
-    duration: "30 min",
-    passengers: 25,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    id: "95700L15",
+    plateNumber: "95700L15",
+    model: "A4",
+    brand: "Audi",
   },
   {
-    id: "2",
-    title: "Retour École",
-    date: "2025-10-20",
-    time: "14:00",
-    type: "Retour",
-    status: "Planifié",
-    driver: {
-      name: "David Jacques",
-      phone: "+212 6 12 34 56 78",
-    },
-    vehicle: {
-      type: "Bus",
-      plateNumber: "A 12345 B",
-      capacity: 45,
-    },
-    pickup: {
-      address: "École Soleil",
-      time: "14:00",
-    },
-    dropoff: {
-      address: "Quartier Soleil",
-      time: "14:30",
-    },
-    distance: "3 Km",
-    duration: "30 min",
-    passengers: 25,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    id: "SN-UX420-77V1",
+    plateNumber: "SN-UX420-77V1",
+    model: "S 580 e 4MATIC Long",
+    brand: "Mercedes-Benz",
+  },
+  {
+    id: "98765ABC",
+    plateNumber: "98765ABC",
+    model: "Transit",
+    brand: "Ford",
   },
 ];
 
-function getStartOfWeek(date: Date): Date {
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(date.setDate(diff));
-}
+// Mock data with school trips
+const mockTrips: Trip[] = [
+  // Today's trips
+  {
+    id: "trip_today_1",
+    title: "Trajet les écoles",
+    type: "ecole",
+    date: new Date().toISOString().split("T")[0],
+    startTime: "08:00",
+    endTime: "08:30",
+    status: "prevu",
+    description: "Trajet matinal vers les écoles du secteur",
+    startLocation: "Quartier Sghir",
+    endLocation: "École Amjad",
+    stops: [
+      {
+        id: "stop_1",
+        name: "École Jean Jacques",
+        address: "Rue des Écoles",
+        arrivalTime: "08:10",
+        passengers: 3,
+        type: "dropoff",
+      },
+      {
+        id: "stop_2",
+        name: "École Amjad",
+        address: "Avenue de l'Éducation",
+        arrivalTime: "08:25",
+        passengers: 4,
+        type: "dropoff",
+      },
+    ],
+    assignedVehicle: vehicleAssignments[0],
+    driverId: "driver_001",
+    driverName: "Jean Jacques",
+    driverPhone: "+212 6 12 34 56 78",
+    totalPassengers: 7,
+    confirmedPassengers: 7,
+    canModify: true,
+    canCancel: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "trip_today_2",
+    title: "Trajet les écoles",
+    type: "ecole",
+    date: new Date().toISOString().split("T")[0],
+    startTime: "09:00",
+    endTime: "09:30",
+    status: "prevu",
+    description: "Second trajet écoles",
+    startLocation: "Lycée Francais",
+    endLocation: "École Francais",
+    stops: [
+      {
+        id: "stop_3",
+        name: "Lycée Francais",
+        address: "Boulevard Principal",
+        arrivalTime: "09:10",
+        passengers: 2,
+        type: "pickup",
+      },
+    ],
+    assignedVehicle: vehicleAssignments[1],
+    driverId: "driver_001",
+    driverName: "Jean Jacques",
+    driverPhone: "+212 6 12 34 56 78",
+    totalPassengers: 2,
+    confirmedPassengers: 2,
+    canModify: true,
+    canCancel: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
+  // Current month trips
+  ...currentMonthDates.slice(1, 15).map((date, index) => ({
+    id: `trip_current_${index}`,
+    title: "Trajet les écoles",
+    type: "ecole" as const,
+    date,
+    startTime: ["08:00", "09:00", "11:00", "12:00", "14:00"][index % 5],
+    endTime: ["08:30", "09:30", "11:30", "12:30", "14:30"][index % 5],
+    status: ["prevu", "en_cours", "termine"][index % 3] as any,
+    description: "Trajet scolaire quotidien",
+    startLocation: ["Quartier Sghir", "Lycée Francais", "École Jean Jacques"][
+      index % 3
+    ],
+    endLocation: ["École Amjad", "École Francais", "École Jean Jacques"][
+      index % 3
+    ],
+    stops: [
+      {
+        id: `stop_${index}_1`,
+        name: ["École Jean Jacques", "École Amjad", "Lycée Francais"][
+          index % 3
+        ],
+        address: "Adresse école",
+        arrivalTime: "08:15",
+        passengers: Math.floor(Math.random() * 5) + 1,
+        type: "dropoff" as const,
+      },
+    ],
+    assignedVehicle: vehicleAssignments[index % vehicleAssignments.length],
+    driverId: "driver_001",
+    driverName: "Jean Jacques",
+    driverPhone: "+212 6 12 34 56 78",
+    totalPassengers: Math.floor(Math.random() * 8) + 1,
+    confirmedPassengers: Math.floor(Math.random() * 8) + 1,
+    canModify: true,
+    canCancel: index % 3 !== 2,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  })),
+
+  // Next month trips
+  ...nextMonthDates.slice(0, 10).map((date, index) => ({
+    id: `trip_next_${index}`,
+    title: "Trajet les écoles",
+    type: "ecole" as const,
+    date,
+    startTime: ["08:00", "09:00", "11:00", "12:00", "14:00"][index % 5],
+    endTime: ["08:30", "09:30", "11:30", "12:30", "14:30"][index % 5],
+    status: "prevu" as const,
+    description: "Trajet scolaire planifié",
+    startLocation: ["Quartier Sghir", "Lycée Francais", "École Jean Jacques"][
+      index % 3
+    ],
+    endLocation: ["École Amjad", "École Francais", "École Jean Jacques"][
+      index % 3
+    ],
+    stops: [
+      {
+        id: `stop_next_${index}_1`,
+        name: ["École Jean Jacques", "École Amjad", "Lycée Francais"][
+          index % 3
+        ],
+        address: "Adresse école",
+        arrivalTime: "08:15",
+        passengers: Math.floor(Math.random() * 5) + 1,
+        type: "dropoff" as const,
+      },
+    ],
+    assignedVehicle: vehicleAssignments[index % vehicleAssignments.length],
+    driverId: "driver_001",
+    driverName: "Jean Jacques",
+    driverPhone: "+212 6 12 34 56 78",
+    totalPassengers: Math.floor(Math.random() * 8) + 1,
+    confirmedPassengers: Math.floor(Math.random() * 8) + 1,
+    canModify: true,
+    canCancel: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  })),
+];
+
+const defaultPreferences: PlanningPreferences = {
+  defaultView: "month",
+  showWeekNumbers: false,
+  startWeekOn: 1, // Monday
+  autoRefresh: true,
+  reminderMinutes: [15, 30],
+};
 
 export const usePlanificationStore = create<PlanificationStore>((set, get) => ({
-  trajets: mockTrajets,
-  filteredTrajets: mockTrajets,
+  // State
+  trips: mockTrips,
+  filteredTrips: mockTrips,
   filters: {},
-  viewMode: "month",
-  selectedDate: new Date(),
-  selectedTrajet: null,
+  preferences: defaultPreferences,
+  selectedDate: null,
+  selectedTrip: null,
+  currentView: "month",
   isLoading: false,
   error: null,
 
-  fetchTrajets: async () => {
+  // Actions
+  fetchTrips: async (monthYear?: string) => {
     set({ isLoading: true, error: null });
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       set((state) => {
-        const filteredTrajets = applyFiltersTrajets(mockTrajets, state.filters);
+        const filteredTrips = applyFiltersToTrips(mockTrips, state.filters);
         return {
-          trajets: mockTrajets,
-          filteredTrajets,
+          trips: mockTrips,
+          filteredTrips,
           isLoading: false,
         };
       });
@@ -169,209 +311,171 @@ export const usePlanificationStore = create<PlanificationStore>((set, get) => ({
     }
   },
 
-  getTrajetById: (id: string) => {
-    return get().trajets.find((trajet) => trajet.id === id);
-  },
-
-  addTrajet: async (trajetData) => {
+  fetchTripDetails: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const newTrajet: Trajet = {
-        ...trajetData,
-        id: `trajet_${Date.now()}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      set((state) => {
-        const updatedTrajets = [newTrajet, ...state.trajets];
-        const filteredTrajets = applyFiltersTrajets(
-          updatedTrajets,
-          state.filters
-        );
-        return {
-          trajets: updatedTrajets,
-          filteredTrajets,
-          isLoading: false,
-        };
-      });
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const trip = mockTrips.find((t) => t.id === id);
+      if (trip) {
+        set({ selectedTrip: trip, isLoading: false });
+      } else {
+        set({ error: "Trajet non trouvé", isLoading: false });
+      }
     } catch (error) {
       set({
-        error: "Erreur lors de l'ajout du trajet",
+        error: "Erreur lors du chargement des détails",
         isLoading: false,
       });
-      throw error;
     }
   },
 
-  updateTrajet: async (id: string, data: Partial<Trajet>) => {
-    set({ isLoading: true, error: null });
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      set((state) => {
-        const updatedTrajets = state.trajets.map((trajet) =>
-          trajet.id === id
-            ? { ...trajet, ...data, updatedAt: new Date() }
-            : trajet
-        );
-        const filteredTrajets = applyFiltersTrajets(
-          updatedTrajets,
-          state.filters
-        );
-        return {
-          trajets: updatedTrajets,
-          filteredTrajets,
-          isLoading: false,
-        };
-      });
-    } catch (error) {
-      set({
-        error: "Erreur lors de la mise à jour du trajet",
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
-
-  deleteTrajet: async (id: string) => {
+  updateTripStatus: async (id: string, status, notes) => {
     set({ isLoading: true, error: null });
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
       set((state) => {
-        const updatedTrajets = state.trajets.filter(
-          (trajet) => trajet.id !== id
+        const updatedTrips = state.trips.map((trip) =>
+          trip.id === id
+            ? {
+                ...trip,
+                status,
+                notes: notes || trip.notes,
+                updatedAt: new Date().toISOString(),
+              }
+            : trip
         );
-        const filteredTrajets = applyFiltersTrajets(
-          updatedTrajets,
-          state.filters
-        );
+
+        const filteredTrips = applyFiltersToTrips(updatedTrips, state.filters);
+
         return {
-          trajets: updatedTrajets,
-          filteredTrajets,
+          trips: updatedTrips,
+          filteredTrips,
+          selectedTrip:
+            state.selectedTrip?.id === id
+              ? updatedTrips.find((t) => t.id === id) || state.selectedTrip
+              : state.selectedTrip,
           isLoading: false,
         };
       });
     } catch (error) {
       set({
-        error: "Erreur lors de la suppression du trajet",
+        error: "Erreur lors de la mise à jour du statut",
         isLoading: false,
       });
-      throw error;
     }
   },
 
-  setViewMode: (mode: ViewMode) => {
-    set({ viewMode: mode });
-  },
-
-  setSelectedDate: (date: Date) => {
-    set({ selectedDate: date });
-  },
-
-  setSelectedTrajet: (trajet: Trajet | null) => {
-    set({ selectedTrajet: trajet });
-  },
-
-  setFilters: (newFilters: Partial<PlanificationFilters>) => {
+  setFilters: (newFilters: Partial<PlanningFilters>) => {
     set((state) => {
       const updatedFilters = { ...state.filters, ...newFilters };
-      const filteredTrajets = applyFiltersTrajets(
-        state.trajets,
-        updatedFilters
-      );
+      const filteredTrips = applyFiltersToTrips(state.trips, updatedFilters);
+
       return {
         filters: updatedFilters,
-        filteredTrajets,
+        filteredTrips,
       };
     });
   },
 
   clearFilters: () => {
     set((state) => {
-      const filteredTrajets = applyFiltersTrajets(state.trajets, {});
+      const filteredTrips = applyFiltersToTrips(state.trips, {});
       return {
         filters: {},
-        filteredTrajets,
+        filteredTrips,
       };
     });
   },
 
-  applyFilters: () => {
-    set((state) => {
-      const filteredTrajets = applyFiltersTrajets(state.trajets, state.filters);
-      return { filteredTrajets };
+  setCurrentView: (view: ViewMode) => {
+    set({ currentView: view });
+  },
+
+  setSelectedDate: (date: string | null) => {
+    set({ selectedDate: date });
+  },
+
+  selectTrip: (trip: Trip | null) => {
+    set({ selectedTrip: trip });
+  },
+
+  getFilteredTrips: () => {
+    return get().filteredTrips;
+  },
+
+  getTripsForDate: (date: string) => {
+    return get().filteredTrips.filter((t) => t.date === date);
+  },
+
+  getTripsForWeek: (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    return get()
+      .filteredTrips.filter((trip) => {
+        const tripDate = new Date(trip.date);
+        return tripDate >= start && tripDate <= end;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date}T${a.startTime}`);
+        const dateB = new Date(`${b.date}T${b.startTime}`);
+        return dateA.getTime() - dateB.getTime();
+      });
+  },
+
+  getUpcomingTrips: (limit: number = 10) => {
+    const now = new Date();
+    const currentDateTime = now.getTime();
+
+    return get()
+      .trips.filter((trip) => {
+        if (trip.status === "termine" || trip.status === "annule") {
+          return false;
+        }
+
+        const tripDateTime = new Date(
+          `${trip.date}T${trip.startTime}`
+        ).getTime();
+
+        return tripDateTime >= currentDateTime - 30 * 60 * 1000;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date}T${a.startTime}`);
+        const dateB = new Date(`${b.date}T${b.startTime}`);
+        return dateA.getTime() - dateB.getTime();
+      })
+      .slice(0, limit);
+  },
+
+  getTripCounts: () => {
+    const trips = get().trips;
+    const counts = {
+      total: trips.length,
+      scheduled: 0,
+      inProgress: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+
+    trips.forEach((trip) => {
+      switch (trip.status) {
+        case "prevu":
+          counts.scheduled++;
+          break;
+        case "en_cours":
+          counts.inProgress++;
+          break;
+        case "termine":
+          counts.completed++;
+          break;
+        case "annule":
+          counts.cancelled++;
+          break;
+      }
     });
-  },
 
-  searchTrajets: (query: string) => {
-    set((state) => {
-      const updatedFilters = { ...state.filters, searchQuery: query };
-      const filteredTrajets = applyFiltersTrajets(
-        state.trajets,
-        updatedFilters
-      );
-      return {
-        filters: updatedFilters,
-        filteredTrajets,
-      };
-    });
-  },
-
-  getTrajetsForDate: (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0];
-    return get().filteredTrajets.filter((trajet) => trajet.date === dateStr);
-  },
-
-  getTrajetsForWeek: (weekStart: Date) => {
-    const weekEnd = addDays(weekStart, 6);
-    return get().filteredTrajets.filter((trajet) => {
-      const trajetDate = new Date(trajet.date);
-      return trajetDate >= weekStart && trajetDate <= weekEnd;
-    });
-  },
-
-  getTrajetsForMonth: (month: number, year: number) => {
-    return get().filteredTrajets.filter((trajet) => {
-      const trajetDate = new Date(trajet.date);
-      return (
-        trajetDate.getMonth() === month && trajetDate.getFullYear() === year
-      );
-    });
-  },
-
-  goToNextPeriod: () => {
-    const { viewMode, selectedDate } = get();
-    let newDate = new Date(selectedDate);
-
-    if (viewMode === "day") {
-      newDate = addDays(newDate, 1);
-    } else if (viewMode === "week") {
-      newDate = addDays(newDate, 7);
-    } else if (viewMode === "month") {
-      newDate.setMonth(newDate.getMonth() + 1);
-    }
-
-    set({ selectedDate: newDate });
-  },
-
-  goToPreviousPeriod: () => {
-    const { viewMode, selectedDate } = get();
-    let newDate = new Date(selectedDate);
-
-    if (viewMode === "day") {
-      newDate = addDays(newDate, -1);
-    } else if (viewMode === "week") {
-      newDate = addDays(newDate, -7);
-    } else if (viewMode === "month") {
-      newDate.setMonth(newDate.getMonth() - 1);
-    }
-
-    set({ selectedDate: newDate });
-  },
-
-  goToToday: () => {
-    set({ selectedDate: new Date() });
+    return counts;
   },
 
   clearError: () => {

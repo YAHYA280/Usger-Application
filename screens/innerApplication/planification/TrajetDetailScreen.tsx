@@ -1,8 +1,8 @@
+// screens/innerApplication/planification/TrajetDetailScreen.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
-  Alert,
   Animated,
   Linking,
   Platform,
@@ -14,12 +14,27 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
+import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { Header } from "../../../shared/components/ui/Header";
 import {
-  STATUS_COLORS,
-  TRAJET_COLORS,
+  TRIP_STATUS_LABELS,
+  TRIP_TYPE_COLORS,
+  TRIP_TYPE_LABELS,
 } from "../../../shared/types/planification";
 import { usePlanificationStore } from "../../../store/planificationStore";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 120,
+  },
+});
 
 export const TrajetDetailScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -27,8 +42,8 @@ export const TrajetDetailScreen: React.FC = () => {
   const trajetId = params.id as string;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const { getTrajetById, deleteTrajet } = usePlanificationStore();
-  const trajet = getTrajetById(trajetId);
+  const { trips } = usePlanificationStore();
+  const trajet = trips.find((t) => t.id === trajetId);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -39,45 +54,50 @@ export const TrajetDetailScreen: React.FC = () => {
   }, []);
 
   const handleCall = () => {
-    if (trajet?.driver.phone) {
-      Linking.openURL(`tel:${trajet.driver.phone}`);
+    if (trajet?.driverPhone) {
+      Linking.openURL(`tel:${trajet.driverPhone}`);
     }
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      "Supprimer le trajet",
-      "Êtes-vous sûr de vouloir supprimer ce trajet ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteTrajet(trajetId);
-              router.back();
-            } catch (error) {
-              Alert.alert("Erreur", "Impossible de supprimer le trajet");
-            }
-          },
-        },
-      ]
-    );
+  const formatTime = (time: string) => time.substring(0, 5);
+
+  const formatDate = (date: string) => {
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString("fr-FR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   const getStatusIcon = () => {
     switch (trajet?.status) {
-      case "Planifié":
+      case "prevu":
         return "calendar-outline";
-      case "En cours":
+      case "en_cours":
         return "time-outline";
-      case "Terminé":
+      case "termine":
         return "checkmark-circle-outline";
-      case "Annulé":
+      case "annule":
         return "close-circle-outline";
       default:
         return "calendar-outline";
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (trajet?.status) {
+      case "prevu":
+        return colors.warning;
+      case "en_cours":
+        return colors.info;
+      case "termine":
+        return colors.success;
+      case "annule":
+        return colors.error;
+      default:
+        return colors.textSecondary;
     }
   };
 
@@ -115,7 +135,9 @@ export const TrajetDetailScreen: React.FC = () => {
     );
   }
 
-  const styles = StyleSheet.create({
+  const typeColor = TRIP_TYPE_COLORS[trajet.type as keyof typeof TRIP_TYPE_COLORS];
+
+  const dynamicStyles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.backgroundSecondary,
@@ -133,7 +155,7 @@ export const TrajetDetailScreen: React.FC = () => {
       padding: 20,
       marginBottom: 16,
       borderLeftWidth: 6,
-      borderLeftColor: TRAJET_COLORS[trajet.type],
+      borderLeftColor: typeColor,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
@@ -161,11 +183,23 @@ export const TrajetDetailScreen: React.FC = () => {
       borderRadius: 16,
       gap: 6,
       marginBottom: 16,
+      backgroundColor: getStatusColor(),
     },
     statusText: {
       fontSize: 13,
       fontWeight: "600",
       color: "#ffffff",
+    },
+    typeLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: typeColor,
+      backgroundColor: typeColor + "15",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+      alignSelf: "flex-start",
+      marginBottom: 12,
     },
     dateTimeRow: {
       flexDirection: "row",
@@ -289,47 +323,35 @@ export const TrajetDetailScreen: React.FC = () => {
       fontWeight: "600",
       color: colors.text,
     },
-    statsRow: {
-      flexDirection: "row",
-      gap: 12,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: colors.backgroundSecondary,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: "center",
-    },
-    statIcon: {
-      marginBottom: 8,
-    },
-    statValue: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: colors.text,
-      marginBottom: 4,
-    },
-    statLabel: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      textAlign: "center",
-    },
-    deleteButton: {
-      backgroundColor: colors.error,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: "center",
+    stopsContainer: {
       marginTop: 8,
     },
-    deleteButtonText: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: "#ffffff",
+    stopItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 4,
+    },
+    stopDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginRight: 8,
+    },
+    stopText: {
+      fontSize: 14,
+      flex: 1,
+      color: colors.text,
+    },
+    stopTime: {
+      fontSize: 12,
+      fontWeight: "500",
+      marginLeft: 8,
+      color: colors.textSecondary,
     },
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <Header
         leftIcon={{
           icon: "chevron-left",
@@ -338,88 +360,124 @@ export const TrajetDetailScreen: React.FC = () => {
         title="Détails du trajet"
       />
 
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+      <Animated.View style={[dynamicStyles.content, { opacity: fadeAnim }]}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={dynamicStyles.scrollContent}
         >
-          <View style={styles.headerCard}>
-            <Text style={styles.title}>{trajet.title}</Text>
+          <View style={dynamicStyles.headerCard}>
+            <Text style={dynamicStyles.title}>{trajet.title}</Text>
 
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: STATUS_COLORS[trajet.status] },
-              ]}
-            >
+            <Text style={dynamicStyles.typeLabel}>
+              {TRIP_TYPE_LABELS[trajet.type as keyof typeof TRIP_TYPE_LABELS]}
+            </Text>
+
+            <View style={dynamicStyles.statusBadge}>
               <Ionicons
                 name={getStatusIcon() as any}
                 size={16}
                 color="#ffffff"
               />
-              <Text style={styles.statusText}>{trajet.status}</Text>
+              <Text style={dynamicStyles.statusText}>
+                {TRIP_STATUS_LABELS[trajet.status as keyof typeof TRIP_STATUS_LABELS]}
+              </Text>
             </View>
 
-            <View style={styles.dateTimeRow}>
+            <View style={dynamicStyles.dateTimeRow}>
               <Ionicons
                 name="calendar-outline"
                 size={20}
                 color={colors.primary}
               />
-              <Text style={styles.dateTimeText}>{trajet.date}</Text>
+              <Text style={dynamicStyles.dateTimeText}>
+                {formatDate(trajet.date)}
+              </Text>
             </View>
 
-            <View style={styles.dateTimeRow}>
+            <View style={dynamicStyles.dateTimeRow}>
               <Ionicons name="time-outline" size={20} color={colors.primary} />
-              <Text style={styles.dateTimeText}>{trajet.time}</Text>
+              <Text style={dynamicStyles.dateTimeText}>
+                {formatTime(trajet.startTime)} - {formatTime(trajet.endTime)}
+              </Text>
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Itinéraire</Text>
+          <View style={dynamicStyles.section}>
+            <Text style={dynamicStyles.sectionTitle}>Itinéraire</Text>
 
-            <View style={styles.locationItem}>
+            <View style={dynamicStyles.locationItem}>
               <View
                 style={[
-                  styles.locationDot,
+                  dynamicStyles.locationDot,
                   { backgroundColor: colors.primary },
                 ]}
               />
-              <View style={styles.locationContent}>
-                <Text style={styles.locationLabel}>Départ</Text>
-                <Text style={styles.locationAddress}>
-                  {trajet.pickup.address}
+              <View style={dynamicStyles.locationContent}>
+                <Text style={dynamicStyles.locationLabel}>Départ</Text>
+                <Text style={dynamicStyles.locationAddress}>
+                  {trajet.startLocation}
                 </Text>
-                <Text style={styles.locationTime}>{trajet.pickup.time}</Text>
+                <Text style={dynamicStyles.locationTime}>
+                  {formatTime(trajet.startTime)}
+                </Text>
               </View>
             </View>
 
-            <View style={styles.locationItem}>
+            <ConditionalComponent isValid={trajet.stops.length > 0}>
+              <View style={dynamicStyles.stopsContainer}>
+                <Text style={dynamicStyles.locationLabel}>Arrêts:</Text>
+                {trajet.stops.map((stop: any, index: number) => (
+                  <View key={stop.id} style={dynamicStyles.stopItem}>
+                    <View
+                      style={[
+                        dynamicStyles.stopDot,
+                        { backgroundColor: typeColor },
+                      ]}
+                    />
+                    <Text style={dynamicStyles.stopText}>{stop.name}</Text>
+                    <Text style={dynamicStyles.stopTime}>
+                      {formatTime(stop.arrivalTime)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </ConditionalComponent>
+
+            <View style={dynamicStyles.locationItem}>
               <View
-                style={[styles.locationDot, { backgroundColor: colors.error }]}
+                style={[
+                  dynamicStyles.locationDot,
+                  { backgroundColor: colors.error },
+                ]}
               />
-              <View style={styles.locationContent}>
-                <Text style={styles.locationLabel}>Arrivée</Text>
-                <Text style={styles.locationAddress}>
-                  {trajet.dropoff.address}
+              <View style={dynamicStyles.locationContent}>
+                <Text style={dynamicStyles.locationLabel}>Arrivée</Text>
+                <Text style={dynamicStyles.locationAddress}>
+                  {trajet.endLocation}
                 </Text>
-                <Text style={styles.locationTime}>{trajet.dropoff.time}</Text>
+                <Text style={dynamicStyles.locationTime}>
+                  {formatTime(trajet.endTime)}
+                </Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Chauffeur</Text>
-            <View style={styles.driverCard}>
-              <View style={styles.driverAvatar}>
+          <View style={dynamicStyles.section}>
+            <Text style={dynamicStyles.sectionTitle}>Chauffeur</Text>
+            <View style={dynamicStyles.driverCard}>
+              <View style={dynamicStyles.driverAvatar}>
                 <Ionicons name="person" size={28} color={colors.primary} />
               </View>
-              <View style={styles.driverInfo}>
-                <Text style={styles.driverName}>{trajet.driver.name}</Text>
-                <Text style={styles.driverPhone}>{trajet.driver.phone}</Text>
+              <View style={dynamicStyles.driverInfo}>
+                <Text style={dynamicStyles.driverName}>
+                  {trajet.driverName}
+                </Text>
+                <Text style={dynamicStyles.driverPhone}>
+                  {trajet.driverPhone}
+                </Text>
               </View>
               <TouchableOpacity
-                style={styles.callButton}
+                style={dynamicStyles.callButton}
                 onPress={handleCall}
                 activeOpacity={0.7}
               >
@@ -428,73 +486,56 @@ export const TrajetDetailScreen: React.FC = () => {
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Véhicule</Text>
-            <View style={styles.vehicleInfo}>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Type</Text>
-                <Text style={styles.infoValue}>{trajet.vehicle.type}</Text>
+          <ConditionalComponent isValid={!!trajet.assignedVehicle}>
+            <View style={dynamicStyles.section}>
+              <Text style={dynamicStyles.sectionTitle}>Véhicule</Text>
+              <View style={dynamicStyles.vehicleInfo}>
+                <View style={dynamicStyles.infoRow}>
+                  <Text style={dynamicStyles.infoLabel}>Immatriculation</Text>
+                  <Text style={dynamicStyles.infoValue}>
+                    {trajet.assignedVehicle?.plateNumber}
+                  </Text>
+                </View>
+                <View style={dynamicStyles.infoRow}>
+                  <Text style={dynamicStyles.infoLabel}>Marque</Text>
+                  <Text style={dynamicStyles.infoValue}>
+                    {trajet.assignedVehicle?.brand}
+                  </Text>
+                </View>
+                <View style={dynamicStyles.infoRow}>
+                  <Text style={dynamicStyles.infoLabel}>Modèle</Text>
+                  <Text style={dynamicStyles.infoValue}>
+                    {trajet.assignedVehicle?.model}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Immatriculation</Text>
-                <Text style={styles.infoValue}>
-                  {trajet.vehicle.plateNumber}
+            </View>
+          </ConditionalComponent>
+
+          <View style={dynamicStyles.section}>
+            <Text style={dynamicStyles.sectionTitle}>Passagers</Text>
+            <View style={dynamicStyles.vehicleInfo}>
+              <View style={dynamicStyles.infoRow}>
+                <Text style={dynamicStyles.infoLabel}>Total</Text>
+                <Text style={dynamicStyles.infoValue}>
+                  {trajet.totalPassengers}
                 </Text>
               </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Capacité</Text>
-                <Text style={styles.infoValue}>
-                  {trajet.vehicle.capacity} places
+              <View style={dynamicStyles.infoRow}>
+                <Text style={dynamicStyles.infoLabel}>Confirmés</Text>
+                <Text style={dynamicStyles.infoValue}>
+                  {trajet.confirmedPassengers}
                 </Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informations</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statCard}>
-                <Ionicons
-                  name="navigate-outline"
-                  size={24}
-                  color={colors.primary}
-                  style={styles.statIcon}
-                />
-                <Text style={styles.statValue}>{trajet.distance}</Text>
-                <Text style={styles.statLabel}>Distance</Text>
-              </View>
-
-              <View style={styles.statCard}>
-                <Ionicons
-                  name="time-outline"
-                  size={24}
-                  color={colors.primary}
-                  style={styles.statIcon}
-                />
-                <Text style={styles.statValue}>{trajet.duration}</Text>
-                <Text style={styles.statLabel}>Durée</Text>
-              </View>
-
-              <View style={styles.statCard}>
-                <Ionicons
-                  name="people-outline"
-                  size={24}
-                  color={colors.primary}
-                  style={styles.statIcon}
-                />
-                <Text style={styles.statValue}>{trajet.passengers}</Text>
-                <Text style={styles.statLabel}>Passagers</Text>
-              </View>
+          <ConditionalComponent isValid={!!trajet.notes}>
+            <View style={dynamicStyles.section}>
+              <Text style={dynamicStyles.sectionTitle}>Notes</Text>
+              <Text style={dynamicStyles.infoValue}>{trajet.notes}</Text>
             </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.deleteButtonText}>Supprimer le trajet</Text>
-          </TouchableOpacity>
+          </ConditionalComponent>
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
