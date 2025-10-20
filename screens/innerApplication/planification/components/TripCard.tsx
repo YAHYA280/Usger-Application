@@ -14,7 +14,6 @@ import { useThemeColors } from "../../../../hooks/useTheme";
 import {
   TRIP_STATUS_LABELS,
   TRIP_TYPE_COLORS,
-  TRIP_TYPE_LABELS,
   Trip,
 } from "../../../../shared/types/planification";
 
@@ -48,7 +47,7 @@ export const TripCard: React.FC<TripCardProps> = ({
   const getStatusColor = () => {
     switch (trip.status) {
       case "prevu":
-        return colors.warning;
+        return colors.success;
       case "en_cours":
         return colors.info;
       case "termine":
@@ -60,15 +59,30 @@ export const TripCard: React.FC<TripCardProps> = ({
     }
   };
 
+  const getStatusBackgroundColor = () => {
+    switch (trip.status) {
+      case "prevu":
+        return colors.success + "15";
+      case "en_cours":
+        return colors.info + "15";
+      case "termine":
+        return colors.success + "15";
+      case "annule":
+        return colors.error + "15";
+      default:
+        return colors.textSecondary + "15";
+    }
+  };
+
   const typeColor = TRIP_TYPE_COLORS[trip.type];
 
   const styles = StyleSheet.create({
     container: {
       flexDirection: "row",
-      alignItems: "center",
+      alignItems: "flex-start",
       padding: 16,
       marginHorizontal: 16,
-      marginVertical: 4,
+      marginVertical: 6,
       borderRadius: 12,
       backgroundColor: colors.card,
       borderLeftWidth: 4,
@@ -97,124 +111,64 @@ export const TripCard: React.FC<TripCardProps> = ({
       alignItems: "center",
       justifyContent: "center",
       marginRight: 12,
-      backgroundColor: typeColor + "20",
+      backgroundColor: colors.primary + "15",
     },
     contentContainer: {
       flex: 1,
       justifyContent: "center",
     },
-    titleRow: {
+    header: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 4,
+      justifyContent: "space-between",
+      marginBottom: 8,
     },
-    tripTitle: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: colors.text,
+    dateTimeContainer: {
       flex: 1,
-      marginRight: 8,
     },
-    typeLabel: {
-      fontSize: 12,
-      fontWeight: "500",
-      color: typeColor,
-      backgroundColor: typeColor + "15",
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 8,
-    },
-    timeRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 4,
+    dateText: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: colors.text,
+      marginBottom: 2,
     },
     timeText: {
       fontSize: 14,
-      fontWeight: "500",
+      fontWeight: "400",
       color: colors.textSecondary,
-      marginRight: 12,
     },
-    dateText: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: colors.textSecondary,
-      marginRight: 12,
+    statusBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      marginLeft: 8,
+    },
+    statusText: {
+      fontSize: 12,
+      fontWeight: "600",
     },
     routeRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 4,
+      marginBottom: 8,
     },
     routeIcon: {
       marginRight: 6,
     },
     routeText: {
-      fontSize: 13,
-      color: colors.textTertiary,
+      fontSize: 14,
+      color: colors.textSecondary,
       flex: 1,
     },
-    detailsRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    leftDetails: {
+    footer: {
       flexDirection: "row",
       alignItems: "center",
     },
-    vehicleInfo: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginRight: 12,
-    },
-    vehicleIcon: {
-      marginRight: 4,
-    },
-    vehicleText: {
-      fontSize: 12,
+    footerText: {
+      fontSize: 13,
       color: colors.textTertiary,
-      fontWeight: "500",
-    },
-    passengersInfo: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    passengersIcon: {
-      marginRight: 4,
-    },
-    passengersText: {
-      fontSize: 12,
-      color: colors.textTertiary,
-    },
-    statusContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    statusDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      marginRight: 6,
-    },
-    statusText: {
-      fontSize: 12,
-      fontWeight: "500",
     },
   });
-
-  const getTripIcon = () => {
-    switch (trip.type) {
-      case "ecole":
-        return "graduation-cap";
-      case "transport":
-        return "bus";
-      case "maintenance":
-        return "wrench";
-      default:
-        return "map-marker";
-    }
-  };
 
   return (
     <TouchableOpacity
@@ -224,76 +178,55 @@ export const TripCard: React.FC<TripCardProps> = ({
     >
       {/* Left Icon */}
       <View style={styles.iconContainer}>
-        <FontAwesome name={getTripIcon()} size={20} color={typeColor} />
+        <FontAwesome name="road" size={20} color={colors.primary} />
       </View>
 
       {/* Content */}
       <View style={styles.contentContainer}>
-        <View style={styles.titleRow}>
-          <Text style={styles.tripTitle} numberOfLines={1}>
-            {trip.title}
-          </Text>
-          <Text style={styles.typeLabel}>{TRIP_TYPE_LABELS[trip.type]}</Text>
+        {/* Header: Date/Time + Status */}
+        <View style={styles.header}>
+          <View style={styles.dateTimeContainer}>
+            <ConditionalComponent isValid={showDate}>
+              <Text style={styles.dateText}>{formatDate(trip.date)}</Text>
+            </ConditionalComponent>
+            <ConditionalComponent isValid={!showDate}>
+              <Text style={styles.dateText}>{formatTime(trip.startTime)}</Text>
+            </ConditionalComponent>
+            <Text style={styles.timeText}>
+              {trip.startLocation} → {trip.endLocation}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusBackgroundColor() },
+            ]}
+          >
+            <Text style={[styles.statusText, { color: getStatusColor() }]}>
+              {TRIP_STATUS_LABELS[trip.status]}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.timeRow}>
-          <ConditionalComponent isValid={showDate}>
-            <Text style={styles.dateText}>{formatDate(trip.date)}</Text>
-          </ConditionalComponent>
-          <Text style={styles.timeText}>
-            {formatTime(trip.startTime)} - {formatTime(trip.endTime)}
-          </Text>
-        </View>
-
+        {/* Route Information */}
         <View style={styles.routeRow}>
           <FontAwesome
-            name="road"
+            name="map-marker"
             size={12}
             color={colors.textTertiary}
             style={styles.routeIcon}
           />
           <Text style={styles.routeText} numberOfLines={1}>
-            {trip.startLocation} → {trip.endLocation}
+            {trip.title}
           </Text>
         </View>
 
-        <View style={styles.detailsRow}>
-          <View style={styles.leftDetails}>
-            <ConditionalComponent isValid={!!trip.assignedVehicle}>
-              <View style={styles.vehicleInfo}>
-                <FontAwesome
-                  name="car"
-                  size={12}
-                  color={colors.textTertiary}
-                  style={styles.vehicleIcon}
-                />
-                <Text style={styles.vehicleText}>
-                  {trip.assignedVehicle?.plateNumber}
-                </Text>
-              </View>
-            </ConditionalComponent>
-
-            <View style={styles.passengersInfo}>
-              <FontAwesome
-                name="users"
-                size={12}
-                color={colors.textTertiary}
-                style={styles.passengersIcon}
-              />
-              <Text style={styles.passengersText}>
-                {trip.confirmedPassengers}/{trip.totalPassengers}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.statusContainer}>
-            <View
-              style={[styles.statusDot, { backgroundColor: getStatusColor() }]}
-            />
-            <Text style={[styles.statusText, { color: getStatusColor() }]}>
-              {TRIP_STATUS_LABELS[trip.status]}
-            </Text>
-          </View>
+        {/* Footer Info */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            {showDate ? formatDate(trip.date) : trip.notes || "Aller"}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>

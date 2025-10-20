@@ -1,5 +1,5 @@
 // screens/innerApplication/planification/components/ViewModeSelector.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import {
   Platform,
@@ -9,33 +9,36 @@ import {
   View,
 } from "react-native";
 import { useThemeColors } from "../../../../hooks/useTheme";
-import { ViewMode } from "../../../../shared/types/planification";
+
+type ViewMode = "day" | "week" | "month";
 
 interface ViewModeSelectorProps {
   selectedMode: ViewMode;
   onModeChange: (mode: ViewMode) => void;
+  isChanging?: boolean;
 }
 
 export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   selectedMode,
   onModeChange,
+  isChanging = false,
 }) => {
   const colors = useThemeColors();
 
-  const modes: { value: ViewMode; label: string; icon: any }[] = [
-    { value: "month", label: "Mois", icon: "calendar" },
-    { value: "week", label: "Semaine", icon: "calendar-outline" },
-    { value: "day", label: "Jour", icon: "today" },
+  const modes: { value: ViewMode; label: string; icon: string }[] = [
+    { value: "day", label: "Jour", icon: "list" },
+    { value: "week", label: "Semaine", icon: "calendar" },
+    { value: "month", label: "Mois", icon: "calendar-o" },
   ];
 
   const styles = StyleSheet.create({
     container: {
       flexDirection: "row",
-      backgroundColor: colors.backgroundSecondary,
+      backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 4,
       marginHorizontal: 16,
-      marginBottom: 16,
+      marginVertical: 12,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
@@ -73,33 +76,29 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
 
   return (
     <View style={styles.container}>
-      {modes.map((mode) => (
-        <TouchableOpacity
-          key={mode.value}
-          style={[
-            styles.modeButton,
-            selectedMode === mode.value && styles.selectedMode,
-          ]}
-          onPress={() => onModeChange(mode.value)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={mode.icon as any}
-            size={18}
-            color={
-              selectedMode === mode.value ? "#ffffff" : colors.textSecondary
-            }
-          />
-          <Text
-            style={[
-              styles.modeText,
-              selectedMode === mode.value && styles.selectedModeText,
-            ]}
+      {modes.map((mode) => {
+        const isSelected = selectedMode === mode.value;
+        return (
+          <TouchableOpacity
+            key={mode.value}
+            style={[styles.modeButton, isSelected && styles.selectedMode]}
+            onPress={() => onModeChange(mode.value)}
+            activeOpacity={0.7}
+            disabled={isChanging}
           >
-            {mode.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+            <FontAwesome
+              name={mode.icon as any}
+              size={16}
+              color={isSelected ? "#ffffff" : colors.textSecondary}
+            />
+            <Text
+              style={[styles.modeText, isSelected && styles.selectedModeText]}
+            >
+              {mode.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
