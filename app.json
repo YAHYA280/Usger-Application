@@ -9,7 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Cette application a besoin d'accéder à votre position pour le suivi en temps réel.",
+        "NSLocationAlwaysUsageDescription": "Cette application a besoin d'accéder à votre position pour le suivi en temps réel."
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyDwCmFr8Mfs2JTWjNxjMI1n6R1sv_-aBOo"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +26,16 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDwCmFr8Mfs2JTWjNxjMI1n6R1sv_-aBOo"
+        }
+      }
     },
     "web": {
       "output": "static",

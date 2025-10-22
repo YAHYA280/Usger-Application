@@ -10,7 +10,7 @@ import MapView, {
 } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { useThemeColors } from "../../../hooks/useTheme";
-import { Location, PointOfInterest, Trip } from "../../types/gelocation";
+import { Location, PointOfInterest, Trip } from "../../types/tracking";
 
 interface GoogleMapsViewProps {
   currentLocation: Location | null;
@@ -53,9 +53,7 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
   });
 
   const GOOGLE_MAPS_API_KEY =
-    process.env.EXPO_PUBLIC_GOOGLE_API_KEY || "GOOGLE_MAPS_API_KEY";
-  const isApiKeyMissing =
-    !GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY === "GOOGLE_MAPS_API_KEY";
+    process.env.EXPO_PUBLIC_GOOGLE_API_KEY || "AIzaSyDwCmFr8Mfs2JTWjNxjMI1n6R1sv_-aBOo";
 
   const getMapType = (): RNMapType => {
     switch (mapType) {
@@ -216,7 +214,7 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
   );
 
   const renderDirections = () => {
-    if (!currentTrip || isApiKeyMissing || currentTrip.points.length < 2) {
+    if (!currentTrip || !currentTrip.points || currentTrip.points.length < 2) {
       return null;
     }
 
@@ -383,60 +381,21 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
     },
   });
 
-  if (isApiKeyMissing) {
-    return (
-      <View style={[styles.container, style]}>
-        <View style={styles.errorContainer}>
-          <Ionicons
-            name="warning"
-            size={48}
-            color={colors.warning}
-            style={styles.errorIcon}
-          />
-          <Text style={styles.errorTitle}>Clé API Google Maps manquante</Text>
-          <Text style={styles.errorText}>
-            La carte fonctionne en mode basique.{"\n"}
-            Pour les directions et fonctionnalités avancées,{"\n"}
-            configurez votre clé API Google Maps.
-          </Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() =>
-              Alert.alert(
-                "Configuration requise",
-                "Ajoutez votre clé API Google Maps dans les variables d'environnement:\nEXPO_PUBLIC_GOOGLE_API_KEY=YOUR_API_KEY"
-              )
-            }
-          >
-            <Text style={styles.retryButtonText}>En savoir plus</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, style]}>
-      <ConditionalComponent isValid={!isMapReady} defaultComponent={null}>
-        <View style={styles.loadingContainer}>
-          <Ionicons name="map" size={48} color={colors.primary} />
-          <Text style={styles.loadingText}>Chargement de la carte...</Text>
-        </View>
-      </ConditionalComponent>
-
       <MapView
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
         mapType={getMapType()}
-        customMapStyle={getNightModeStyle()}
+        customMapStyle={nightMode ? getNightModeStyle() : undefined}
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={true}
         showsScale={true}
         showsTraffic={showTraffic}
         showsPointsOfInterest={showPOI}
-        region={region}
+        initialRegion={region}
         onMapReady={handleMapReady}
         onRegionChangeComplete={setRegion}
         loadingEnabled={true}
@@ -461,7 +420,7 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
         )}
 
         {trips.map((trip) =>
-          trip.points.map((point) => (
+          trip.points?.map((point) => (
             <Marker
               key={`${trip.id}-${point.id}`}
               coordinate={point.coordinates}

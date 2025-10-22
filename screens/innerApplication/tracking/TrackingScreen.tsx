@@ -1,3 +1,5 @@
+// screens/innerApplication/tracking/TrackingScreen.tsx
+
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -15,18 +17,19 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { GoogleMapsView } from "../../../shared/components/maps/GoogleMapsView";
 import { Header } from "../../../shared/components/ui/Header";
-import {
+import { useTrackingStore } from "../../../store/trackingStore";
+
+// Import types from tracking
+import type {
   Location,
   PointOfInterest,
   Trip,
-} from "../../../shared/types/gelocation";
-import { useTrackingStore } from "../../../store/trackingStore";
+} from "../../../shared/types/tracking";
 
 export const TrackingScreen: React.FC = () => {
   const { colors } = useTheme();
   const [showDriverDetails, setShowDriverDetails] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const {
     currentTrip,
@@ -35,17 +38,10 @@ export const TrackingScreen: React.FC = () => {
     fetchCurrentTrip,
     centerOnVehicle,
     changeMapViewMode,
-    callDriver,
   } = useTrackingStore();
 
   useEffect(() => {
     fetchCurrentTrip();
-
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start();
   }, []);
 
   useEffect(() => {
@@ -64,7 +60,7 @@ export const TrackingScreen: React.FC = () => {
         friction: 11,
       }).start();
     }
-  }, [showDriverDetails]);
+  }, [showDriverDetails, slideAnim]);
 
   const handleCallDriver = () => {
     if (currentTrip?.chauffeur.telephone) {
@@ -78,12 +74,13 @@ export const TrackingScreen: React.FC = () => {
   };
 
   const handleChangeMapView = () => {
-    const modes: Array<"standard" | "satellite" | "hybrid"> = [
-      "standard",
+    const modes: Array<"roadmap" | "satellite" | "hybrid" | "terrain"> = [
+      "roadmap",
       "satellite",
       "hybrid",
+      "terrain",
     ];
-    const currentIndex = modes.indexOf(settings.mapViewMode);
+    const currentIndex = modes.indexOf(settings.map.mapType);
     const nextMode = modes[(currentIndex + 1) % modes.length];
     changeMapViewMode(nextMode);
   };
@@ -99,12 +96,13 @@ export const TrackingScreen: React.FC = () => {
     return `${distance.toFixed(1)} km`;
   };
 
-  // Convertir les données pour GoogleMapsView
-  const currentLocation: Location | null = currentTrip
+  // Convert tracking data to GoogleMapsView format
+  const currentLocation: Location | null = currentTrip?.positionActuelle
     ? {
         latitude: currentTrip.positionActuelle.latitude,
         longitude: currentTrip.positionActuelle.longitude,
         address: currentTrip.positionActuelle.address,
+        timestamp: currentTrip.positionActuelle.timestamp.toISOString(),
       }
     : null;
 
@@ -112,9 +110,23 @@ export const TrackingScreen: React.FC = () => {
     ? [
         {
           id: currentTrip.id,
-          name: currentTrip.nom,
-          status: "active",
-          points: [
+          nom: currentTrip.nom,
+          statut: currentTrip.statut,
+          heureDepart: currentTrip.heureDepart,
+          heureArriveeEstimee: currentTrip.heureArriveeEstimee,
+          heureArriveeReelle: currentTrip.heureArriveeReelle,
+          distance: currentTrip.distance,
+          distanceParcourue: currentTrip.distanceParcourue,
+          distanceRestante: currentTrip.distanceRestante,
+          pointDepart: currentTrip.pointDepart,
+          pointArrivee: currentTrip.pointArrivee,
+          positionActuelle: currentTrip.positionActuelle,
+          chauffeur: currentTrip.chauffeur,
+          vehicule: currentTrip.vehicule,
+          routePrevu: currentTrip.routePrevu,
+          routeEnCours: currentTrip.routeEnCours,
+          alertes: currentTrip.alertes,
+          points: currentTrip.points || [
             {
               id: "start",
               type: "pickup",
@@ -128,10 +140,10 @@ export const TrackingScreen: React.FC = () => {
               id: "current",
               type: "waypoint",
               coordinates: {
-                latitude: currentTrip.positionActuelle.latitude,
-                longitude: currentTrip.positionActuelle.longitude,
+                latitude: currentTrip.positionActuelle!.latitude,
+                longitude: currentTrip.positionActuelle!.longitude,
               },
-              address: currentTrip.positionActuelle.address || "",
+              address: currentTrip.positionActuelle!.address || "",
             },
             {
               id: "end",
@@ -143,11 +155,24 @@ export const TrackingScreen: React.FC = () => {
               address: currentTrip.pointArrivee.address || "",
             },
           ],
+          customerInfo: currentTrip.customerInfo,
+          notes: currentTrip.notes,
+          createdAt: currentTrip.createdAt,
+          updatedAt: currentTrip.updatedAt,
         },
       ]
     : [];
 
   const pointsOfInterest: PointOfInterest[] = [];
+
+  // Convert mapType to the format expected by GoogleMapsView
+  const getGoogleMapsViewType = ():
+    | "roadmap"
+    | "satellite"
+    | "hybrid"
+    | "terrain" => {
+    return settings.map.mapType;
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -417,19 +442,15 @@ export const TrackingScreen: React.FC = () => {
         title="Suivi en temps réel"
       />
 
-      <Animated.View style={[styles.mapContainer, { opacity: fadeAnim }]}>
+      <View style={styles.mapContainer}>
         <GoogleMapsView
           currentLocation={currentLocation}
           trips={trips}
           currentTrip={trips[0]}
           pointsOfInterest={pointsOfInterest}
-          mapType={
-            settings.mapViewMode === "standard"
-              ? "roadmap"
-              : settings.mapViewMode
-          }
-          showTraffic={settings.showTraffic}
-          centerOnLocation={settings.autoCenter}
+          mapType={getGoogleMapsViewType()}
+          showTraffic={settings.map.showTraffic}
+          centerOnLocation={settings.map.autoFollow}
         />
 
         {/* Contrôles flottants */}
@@ -488,7 +509,7 @@ export const TrackingScreen: React.FC = () => {
           <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
             <Text style={styles.infoLabel}>Distance restante</Text>
             <Text style={styles.infoValue}>
-              {formatDistance(currentTrip.distanceRestante)}
+              {formatDistance(currentTrip.distanceRestante || 0)}
             </Text>
           </View>
 
@@ -581,7 +602,7 @@ export const TrackingScreen: React.FC = () => {
             </TouchableOpacity>
           </Animated.View>
         </ConditionalComponent>
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 };
