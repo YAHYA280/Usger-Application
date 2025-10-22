@@ -1,4 +1,3 @@
-// screens/innerApplication/planification/components/DayAgendaView.tsx
 import ConditionalComponent from "@/shared/components/conditionalComponent/conditionalComponent";
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
@@ -13,37 +12,14 @@ import {
 import { useThemeColors } from "../../../../hooks/useTheme";
 import { TRIP_TYPE_COLORS, Trip } from "../../../../shared/types/planification";
 import { usePlanificationStore } from "../../../../store/planificationStore";
+import { formatDate, formatTime, getWeekDays } from "../utils/planningUtils";
+import { EmptyTripState } from "./EmptyTripState";
 
 interface DayAgendaViewProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
   onTripPress: (trip: Trip) => void;
 }
-
-const formatTime = (time: string) => time.substring(0, 5);
-const formatDate = (dateString: string) => {
-  const dateObj = new Date(dateString);
-  const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-  return {
-    day: dateObj.getDate().toString().padStart(2, "0"),
-    dayName: dayNames[dateObj.getDay()],
-  };
-};
-
-const getWeekDays = (selectedDate: string) => {
-  const date = new Date(selectedDate);
-  const currentDay = date.getDay();
-  const monday = new Date(date);
-  monday.setDate(date.getDate() - currentDay + (currentDay === 0 ? -6 : 1));
-
-  const weekDays = [];
-  for (let i = 0; i < 7; i++) {
-    const day = new Date(monday);
-    day.setDate(monday.getDate() + i);
-    weekDays.push(day);
-  }
-  return weekDays;
-};
 
 export const DayAgendaView: React.FC<DayAgendaViewProps> = ({
   selectedDate,
@@ -198,28 +174,6 @@ export const DayAgendaView: React.FC<DayAgendaViewProps> = ({
       color: colors.textSecondary,
       marginLeft: 4,
     },
-    emptyState: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 60,
-    },
-    emptyIcon: {
-      fontSize: 48,
-      marginBottom: 16,
-      opacity: 0.5,
-    },
-    emptyTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 8,
-    },
-    emptyText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: "center",
-      lineHeight: 20,
-    },
   });
 
   const renderTrip = (trip: Trip) => {
@@ -265,7 +219,6 @@ export const DayAgendaView: React.FC<DayAgendaViewProps> = ({
 
   return (
     <>
-      {/* Week days navigation */}
       <View style={styles.weekContainer}>
         {weekDays.map((day, index) => {
           const dayFormatted = formatDate(day.toISOString().split("T")[0]);
@@ -296,7 +249,6 @@ export const DayAgendaView: React.FC<DayAgendaViewProps> = ({
         })}
       </View>
 
-      {/* Agenda container */}
       <View style={styles.agendaContainer}>
         <View style={styles.agendaHeader}>
           <Text style={styles.agendaTitle}>Heure</Text>
@@ -310,15 +262,7 @@ export const DayAgendaView: React.FC<DayAgendaViewProps> = ({
         >
           <ConditionalComponent
             isValid={trips.length > 0}
-            defaultComponent={
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyIcon}>🚌</Text>
-                <Text style={styles.emptyTitle}>Aucun trajet</Text>
-                <Text style={styles.emptyText}>
-                  Vous n&apos;avez aucun trajet prévu pour cette date.
-                </Text>
-              </View>
-            }
+            defaultComponent={<EmptyTripState />}
           >
             {trips.map((trip) => renderTrip(trip))}
           </ConditionalComponent>

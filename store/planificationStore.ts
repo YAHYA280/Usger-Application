@@ -1,4 +1,3 @@
-// store/planificationStore.ts
 import { create } from "zustand";
 import {
   PlanningActions,
@@ -15,28 +14,58 @@ type PlanificationStore = PlanningState &
     getTripsForWeek: (startDate: string, endDate: string) => Trip[];
   };
 
-// Helper function to apply filters
 const applyFiltersToTrips = (trips: Trip[], filters: PlanningFilters) => {
   let filtered = [...trips];
 
-  // Filter by status
   if (filters.status && filters.status.length > 0) {
     filtered = filtered.filter((t) => filters.status!.includes(t.status));
   }
 
-  // Filter by type
   if (filters.type && filters.type.length > 0) {
     filtered = filtered.filter((t) => filters.type!.includes(t.type));
   }
 
-  // Filter by vehicle
+  if (filters.direction && filters.direction.length > 0) {
+    filtered = filtered.filter((t) => filters.direction!.includes(t.direction));
+  }
+
+  if (filters.driverName && filters.driverName.trim() !== "") {
+    const query = filters.driverName.toLowerCase().trim();
+    filtered = filtered.filter((t) =>
+      t.driverName.toLowerCase().includes(query)
+    );
+  }
+
+  if (filters.pickupLocation && filters.pickupLocation.trim() !== "") {
+    const query = filters.pickupLocation.toLowerCase().trim();
+    filtered = filtered.filter(
+      (t) =>
+        t.startLocation.toLowerCase().includes(query) ||
+        t.stops.some(
+          (stop) =>
+            stop.type === "pickup" && stop.name.toLowerCase().includes(query)
+        )
+    );
+  }
+
+  if (filters.dropoffLocation && filters.dropoffLocation.trim() !== "") {
+    const query = filters.dropoffLocation.toLowerCase().trim();
+    filtered = filtered.filter(
+      (t) =>
+        t.endLocation.toLowerCase().includes(query) ||
+        t.stops.some(
+          (stop) =>
+            stop.type === "dropoff" && stop.name.toLowerCase().includes(query)
+        )
+    );
+  }
+
   if (filters.vehicleId) {
     filtered = filtered.filter(
       (t) => t.assignedVehicle?.id === filters.vehicleId
     );
   }
 
-  // Filter by search query
   if (filters.searchQuery && filters.searchQuery.trim() !== "") {
     const query = filters.searchQuery.toLowerCase().trim();
     filtered = filtered.filter(
@@ -45,12 +74,12 @@ const applyFiltersToTrips = (trips: Trip[], filters: PlanningFilters) => {
         t.description?.toLowerCase().includes(query) ||
         t.startLocation.toLowerCase().includes(query) ||
         t.endLocation.toLowerCase().includes(query) ||
+        t.driverName.toLowerCase().includes(query) ||
         t.assignedVehicle?.plateNumber.toLowerCase().includes(query) ||
         t.stops.some((stop) => stop.name.toLowerCase().includes(query))
     );
   }
 
-  // Filter by date range
   if (filters.dateFrom) {
     filtered = filtered.filter((t) => new Date(t.date) >= filters.dateFrom!);
   }
@@ -59,7 +88,6 @@ const applyFiltersToTrips = (trips: Trip[], filters: PlanningFilters) => {
     filtered = filtered.filter((t) => new Date(t.date) <= filters.dateTo!);
   }
 
-  // Sort by date and time
   return filtered.sort((a, b) => {
     const dateA = new Date(`${a.date}T${a.startTime}`);
     const dateB = new Date(`${b.date}T${b.startTime}`);
@@ -67,7 +95,6 @@ const applyFiltersToTrips = (trips: Trip[], filters: PlanningFilters) => {
   });
 };
 
-// Generate dates for current month and next month
 const generateDatesForMonth = (year: number, month: number) => {
   const dates = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -80,18 +107,15 @@ const generateDatesForMonth = (year: number, month: number) => {
   return dates;
 };
 
-// Get current date info
 const now = new Date();
 const currentYear = now.getFullYear();
 const currentMonth = now.getMonth();
 const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
 const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
 
-// Generate dates for current and next month
 const currentMonthDates = generateDatesForMonth(currentYear, currentMonth);
 const nextMonthDates = generateDatesForMonth(nextMonthYear, nextMonth);
 
-// Vehicle assignments
 const vehicleAssignments = [
   {
     id: "95700L15",
@@ -113,17 +137,16 @@ const vehicleAssignments = [
   },
 ];
 
-// Mock data with school trips
 const mockTrips: Trip[] = [
-  // Today's trips
   {
     id: "trip_today_1",
     title: "Trajet les écoles",
     type: "ecole",
+    direction: "aller",
     date: new Date().toISOString().split("T")[0],
     startTime: "08:00",
     endTime: "08:30",
-    status: "prevu",
+    status: "confirme",
     description: "Trajet matinal vers les écoles du secteur",
     startLocation: "Quartier Sghir",
     endLocation: "École Amjad",
@@ -160,10 +183,11 @@ const mockTrips: Trip[] = [
     id: "trip_today_2",
     title: "Trajet les écoles",
     type: "ecole",
+    direction: "retour",
     date: new Date().toISOString().split("T")[0],
     startTime: "09:00",
     endTime: "09:30",
-    status: "prevu",
+    status: "en_attente",
     description: "Second trajet écoles",
     startLocation: "Lycée Francais",
     endLocation: "École Francais",
@@ -189,15 +213,15 @@ const mockTrips: Trip[] = [
     updatedAt: new Date().toISOString(),
   },
 
-  // Current month trips
   ...currentMonthDates.slice(1, 15).map((date, index) => ({
     id: `trip_current_${index}`,
     title: "Trajet les écoles",
     type: "ecole" as const,
+    direction: ["aller", "retour", "aller_retour"][index % 3] as any,
     date,
     startTime: ["08:00", "09:00", "11:00", "12:00", "14:00"][index % 5],
     endTime: ["08:30", "09:30", "11:30", "12:30", "14:30"][index % 5],
-    status: ["prevu", "en_cours", "termine"][index % 3] as any,
+    status: ["confirme", "en_attente", "termine"][index % 3] as any,
     description: "Trajet scolaire quotidien",
     startLocation: ["Quartier Sghir", "Lycée Francais", "École Jean Jacques"][
       index % 3
@@ -229,15 +253,15 @@ const mockTrips: Trip[] = [
     updatedAt: new Date().toISOString(),
   })),
 
-  // Next month trips
   ...nextMonthDates.slice(0, 10).map((date, index) => ({
     id: `trip_next_${index}`,
     title: "Trajet les écoles",
     type: "ecole" as const,
+    direction: ["aller", "retour", "aller_retour"][index % 3] as any,
     date,
     startTime: ["08:00", "09:00", "11:00", "12:00", "14:00"][index % 5],
     endTime: ["08:30", "09:30", "11:30", "12:30", "14:30"][index % 5],
-    status: "prevu" as const,
+    status: "confirme" as const,
     description: "Trajet scolaire planifié",
     startLocation: ["Quartier Sghir", "Lycée Francais", "École Jean Jacques"][
       index % 3
@@ -279,7 +303,6 @@ const defaultPreferences: PlanningPreferences = {
 };
 
 export const usePlanificationStore = create<PlanificationStore>((set, get) => ({
-  // State
   trips: mockTrips,
   filteredTrips: mockTrips,
   filters: {},
@@ -290,7 +313,6 @@ export const usePlanificationStore = create<PlanificationStore>((set, get) => ({
   isLoading: false,
   error: null,
 
-  // Actions
   fetchTrips: async (monthYear?: string) => {
     set({ isLoading: true, error: null });
     try {
@@ -460,7 +482,7 @@ export const usePlanificationStore = create<PlanificationStore>((set, get) => ({
 
     trips.forEach((trip) => {
       switch (trip.status) {
-        case "prevu":
+        case "confirme":
           counts.scheduled++;
           break;
         case "en_cours":

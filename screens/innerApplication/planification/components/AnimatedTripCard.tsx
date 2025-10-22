@@ -1,7 +1,7 @@
-// screens/innerApplication/planification/components/AnimatedTripCard.tsx
 import React, { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 import { Trip } from "../../../../shared/types/planification";
+import { PLANNING_CONFIG } from "../constants/planningConstants";
 import { TripCard } from "./TripCard";
 
 interface AnimatedTripCardProps {
@@ -10,10 +10,6 @@ interface AnimatedTripCardProps {
   onPress: () => void;
   showDate: boolean;
 }
-
-const ANIMATION_DURATION = 600;
-const STAGGER_DELAY = 100;
-const SPRING_CONFIG = { tension: 100, friction: 8 };
 
 export const AnimatedTripCard: React.FC<AnimatedTripCardProps> = ({
   item,
@@ -25,17 +21,17 @@ export const AnimatedTripCard: React.FC<AnimatedTripCardProps> = ({
   const scaleValue = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
-    const delay = index * STAGGER_DELAY;
+    const delay = index * PLANNING_CONFIG.STAGGER_DELAY;
     const timer = setTimeout(() => {
       Animated.parallel([
         Animated.timing(animValue, {
           toValue: 1,
-          duration: ANIMATION_DURATION,
+          duration: PLANNING_CONFIG.ANIMATION_DURATION,
           useNativeDriver: true,
         }),
         Animated.spring(scaleValue, {
           toValue: 1,
-          ...SPRING_CONFIG,
+          ...PLANNING_CONFIG.SPRING_CONFIG,
           useNativeDriver: true,
         }),
       ]).start();

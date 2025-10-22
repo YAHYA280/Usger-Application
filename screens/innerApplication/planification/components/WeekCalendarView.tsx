@@ -1,4 +1,3 @@
-// screens/innerApplication/planification/components/WeekCalendarView.tsx
 import ConditionalComponent from "@/shared/components/conditionalComponent/conditionalComponent";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -12,7 +11,11 @@ import {
 import { useThemeColors } from "../../../../hooks/useTheme";
 import { TRIP_TYPE_COLORS, Trip } from "../../../../shared/types/planification";
 import { usePlanificationStore } from "../../../../store/planificationStore";
+import { WEEK_DAYS_DISPLAY } from "../constants/planningConstants";
+import { isToday } from "../utils/planningUtils";
 import { AnimatedTripCard } from "./AnimatedTripCard";
+import { EmptyTripState } from "./EmptyTripState";
+import { TripsSectionHeader } from "./TripsSectionHeader";
 
 interface WeekCalendarViewProps {
   selectedDate: string;
@@ -28,7 +31,7 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
   onTripPress,
 }) => {
   const colors = useThemeColors();
-  const { getTripsForDate } = usePlanificationStore(); // ✅ Use store method
+  const { getTripsForDate } = usePlanificationStore();
 
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const date = new Date(selectedDate);
@@ -38,7 +41,7 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
     return monday;
   });
 
-  const getWeekDays = (weekStart: Date) => {
+  const getWeekDaysLocal = (weekStart: Date) => {
     const days = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(weekStart);
@@ -56,18 +59,9 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
     setCurrentWeekStart(newWeekStart);
   };
 
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
-
   const getTripsForDateLocal = (date: Date) => {
     const dateString = date.toISOString().split("T")[0];
-    return getTripsForDate(dateString); // ✅ Use store method
+    return getTripsForDate(dateString);
   };
 
   const getDayDots = (date: Date) => {
@@ -76,15 +70,12 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
     return uniqueTypes.map((type) => TRIP_TYPE_COLORS[type]);
   };
 
-  const weekDays = getWeekDays(currentWeekStart);
+  const weekDays = getWeekDaysLocal(currentWeekStart);
   const monthYear = currentWeekStart.toLocaleDateString("fr-FR", {
     month: "long",
     year: "numeric",
   });
 
-  const dayHeaders = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-
-  // ✅ Get trips for selected date from store
   const selectedTrips = getTripsForDate(selectedDate);
 
   const styles = StyleSheet.create({
@@ -193,55 +184,11 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
     tripsSection: {
       marginTop: 8,
     },
-    tripsSectionHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      backgroundColor: colors.backgroundSecondary,
-    },
-    sectionTitle: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: colors.text,
-    },
-    sectionSubtitle: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-    emptyState: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 60,
-      paddingHorizontal: 32,
-    },
-    emptyIcon: {
-      fontSize: 48,
-      marginBottom: 16,
-      opacity: 0.5,
-    },
-    emptyTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 8,
-      textAlign: "center",
-    },
-    emptyText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: "center",
-      lineHeight: 20,
-    },
   });
 
   return (
     <>
       <View style={styles.container}>
-        {/* Header with navigation */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.navigationButton}
@@ -268,21 +215,19 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Day headers */}
         <View style={styles.weekContainer}>
-          {dayHeaders.map((header, index) => (
+          {WEEK_DAYS_DISPLAY.map((header, index) => (
             <View key={index} style={styles.dayHeaderContainer}>
               <Text style={styles.dayHeader}>{header}</Text>
             </View>
           ))}
         </View>
 
-        {/* Week days */}
         <View style={styles.weekRow}>
           {weekDays.map((day, index) => {
             const isSelected = day.toISOString().split("T")[0] === selectedDate;
-            const isTodayDate = isToday(day);
             const dayString = day.toISOString().split("T")[0];
+            const isTodayDate = isToday(dayString);
             const dots = getDayDots(day);
 
             return (
@@ -306,7 +251,6 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
                   {day.getDate()}
                 </Text>
 
-                {/* Dots for marked dates */}
                 <View style={styles.dotsContainer}>
                   {dots.map((color, dotIndex) => (
                     <View
@@ -326,35 +270,15 @@ export const WeekCalendarView: React.FC<WeekCalendarViewProps> = ({
         </View>
       </View>
 
-      {/* Trips section */}
       <View style={styles.tripsSection}>
-        <View style={styles.tripsSectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>
-              Trajets du{" "}
-              {new Date(selectedDate).toLocaleDateString("fr-FR", {
-                day: "numeric",
-                month: "long",
-              })}
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              {selectedTrips.length} trajet
-              {selectedTrips.length !== 1 ? "s" : ""}
-            </Text>
-          </View>
-        </View>
+        <TripsSectionHeader
+          selectedDate={selectedDate}
+          tripCount={selectedTrips.length}
+        />
 
         <ConditionalComponent
           isValid={selectedTrips.length > 0}
-          defaultComponent={
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>🚌</Text>
-              <Text style={styles.emptyTitle}>Aucun trajet</Text>
-              <Text style={styles.emptyText}>
-                Aucun trajet prévu pour cette date.
-              </Text>
-            </View>
-          }
+          defaultComponent={<EmptyTripState />}
         >
           {selectedTrips.map((trip, index) => (
             <AnimatedTripCard

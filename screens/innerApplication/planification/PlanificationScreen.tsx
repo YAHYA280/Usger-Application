@@ -1,4 +1,3 @@
-// screens/innerApplication/planification/PlanificationScreen.tsx
 import { SearchModal } from "@/shared/components/ui/SearchModal";
 import { usePlanificationStore } from "@/store/planificationStore";
 import { router, useFocusEffect } from "expo-router";
@@ -8,12 +7,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { Header } from "../../../shared/components/ui/Header";
 import { Trip } from "../../../shared/types/planification";
+import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { DayAgendaView } from "./components/DayAgendaView";
 import { MonthCalendarView } from "./components/MonthCalendarView";
 import { ViewModeSelector } from "./components/ViewModeSelector";
 import { WeekCalendarView } from "./components/WeekCalendarView";
-
-const ANIMATION_DURATION = 600;
+import { PLANNING_CONFIG } from "./constants/planningConstants";
 
 const styles = StyleSheet.create({
   container: {
@@ -27,7 +26,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
 });
 
@@ -57,7 +56,6 @@ export const PlanificationScreen: React.FC = () => {
     getTripsForDate,
   } = usePlanificationStore();
 
-  // Reset to current day when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       const today = new Date().toISOString().split("T")[0];
@@ -85,17 +83,17 @@ export const PlanificationScreen: React.FC = () => {
     Animated.sequence([
       Animated.timing(headerAnim, {
         toValue: 1,
-        duration: ANIMATION_DURATION,
+        duration: PLANNING_CONFIG.ANIMATION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(toggleAnim, {
         toValue: 1,
-        duration: ANIMATION_DURATION,
+        duration: PLANNING_CONFIG.ANIMATION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(contentOpacity, {
         toValue: 1,
-        duration: ANIMATION_DURATION,
+        duration: PLANNING_CONFIG.ANIMATION_DURATION,
         useNativeDriver: true,
       }),
     ]).start();
@@ -104,7 +102,6 @@ export const PlanificationScreen: React.FC = () => {
   const animateViewChange = () => {
     setIsViewChanging(true);
 
-    // Button press animation
     Animated.sequence([
       Animated.timing(toggleButtonScale, {
         toValue: 0.95,
@@ -119,7 +116,6 @@ export const PlanificationScreen: React.FC = () => {
       }),
     ]).start();
 
-    // Content transition animation
     Animated.sequence([
       Animated.timing(contentTransition, {
         toValue: 0,
@@ -148,7 +144,7 @@ export const PlanificationScreen: React.FC = () => {
   };
 
   const handleTripPress = (trip: Trip) => {
-    router.push(`/planification/${trip.id}`);
+    router.push(`./planification/${trip.id}`);
   };
 
   const handleRefresh = async () => {
@@ -199,7 +195,11 @@ export const PlanificationScreen: React.FC = () => {
         ref={scrollViewRef}
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+        scrollEnabled={true}
+        bounces={true}
+        alwaysBounceVertical={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -209,7 +209,6 @@ export const PlanificationScreen: React.FC = () => {
           />
         }
       >
-        {/* View Mode Selector (Day/Week/Month Toggle) */}
         <Animated.View
           style={{
             opacity: toggleAnim,
@@ -231,7 +230,6 @@ export const PlanificationScreen: React.FC = () => {
           />
         </Animated.View>
 
-        {/* Animated Content */}
         <Animated.View
           style={{
             opacity: contentOpacity,
@@ -251,8 +249,7 @@ export const PlanificationScreen: React.FC = () => {
             ],
           }}
         >
-          {/* DAY VIEW - Agenda Style */}
-          {viewMode === "day" && (
+          <ConditionalComponent isValid={viewMode === "day"}>
             <DayAgendaView
               selectedDate={
                 selectedDate || new Date().toISOString().split("T")[0]
@@ -260,10 +257,9 @@ export const PlanificationScreen: React.FC = () => {
               onDateChange={handleDayPress}
               onTripPress={handleTripPress}
             />
-          )}
+          </ConditionalComponent>
 
-          {/* WEEK VIEW - Week Calendar with trips below */}
-          {viewMode === "week" && (
+          <ConditionalComponent isValid={viewMode === "week"}>
             <WeekCalendarView
               selectedDate={
                 selectedDate || new Date().toISOString().split("T")[0]
@@ -272,10 +268,9 @@ export const PlanificationScreen: React.FC = () => {
               onDateSelect={handleDayPress}
               onTripPress={handleTripPress}
             />
-          )}
+          </ConditionalComponent>
 
-          {/* MONTH VIEW - Full Calendar with trips below */}
-          {viewMode === "month" && (
+          <ConditionalComponent isValid={viewMode === "month"}>
             <MonthCalendarView
               selectedDate={
                 selectedDate || new Date().toISOString().split("T")[0]
@@ -284,7 +279,7 @@ export const PlanificationScreen: React.FC = () => {
               onDateSelect={handleDayPress}
               onTripPress={handleTripPress}
             />
-          )}
+          </ConditionalComponent>
         </Animated.View>
       </ScrollView>
 
@@ -292,7 +287,7 @@ export const PlanificationScreen: React.FC = () => {
         visible={showSearchModal}
         onClose={() => setShowSearchModal(false)}
         onSearch={(query) => setFilters({ searchQuery: query })}
-        placeholder="Rechercher par école, véhicule, destination..."
+        placeholder="Rechercher par date, lieu, chauffeur, type..."
         initialQuery=""
         title="Rechercher trajets"
       />

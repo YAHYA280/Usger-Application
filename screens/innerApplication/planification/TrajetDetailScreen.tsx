@@ -1,4 +1,3 @@
-// screens/innerApplication/planification/TrajetDetailScreen.tsx
 import { FontAwesome } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -16,7 +15,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { Header } from "../../../shared/components/ui/Header";
+import {
+  TRIP_DIRECTION_LABELS,
+  TRIP_STATUS_COLORS,
+  TRIP_STATUS_LABELS,
+} from "../../../shared/types/planification";
 import { usePlanificationStore } from "../../../store/planificationStore";
+import { PLANNING_CONFIG } from "./constants/planningConstants";
+import { formatTime, getWeekDaysFromDate } from "./utils/planningUtils";
 
 const styles = StyleSheet.create({
   container: {
@@ -26,7 +32,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 80, // ✅ Increased from 40 to 80
+    paddingBottom: 100,
   },
   weekContainer: {
     flexDirection: "row",
@@ -96,6 +102,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  statusDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  statusDetailBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  statusDetailText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
   driverSection: {
     marginHorizontal: 16,
     marginBottom: 20,
@@ -156,7 +177,7 @@ const styles = StyleSheet.create({
   },
   callButtonContainer: {
     marginHorizontal: 16,
-    marginBottom: 50, // ✅ Increased from 30 to 50
+    marginBottom: 50,
   },
   callButton: {
     backgroundColor: "#746CD4",
@@ -199,12 +220,10 @@ export const TrajetDetailScreen: React.FC = () => {
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 600,
+      duration: PLANNING_CONFIG.ANIMATION_DURATION,
       useNativeDriver: true,
     }).start();
   }, []);
-
-  const formatTime = (time: string) => time.substring(0, 5);
 
   const calculateDuration = () => {
     if (!trajet) return "0 min";
@@ -214,32 +233,27 @@ export const TrajetDetailScreen: React.FC = () => {
     return `${durationMin} min`;
   };
 
-  const getWeekDays = () => {
-    if (!selectedDate) return [];
-    const date = new Date(selectedDate);
-    const currentDay = date.getDay();
-    const monday = new Date(date);
-    monday.setDate(date.getDate() - currentDay + (currentDay === 0 ? -6 : 1));
-
-    const weekDays = [];
-    const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      weekDays.push({
-        date: day,
-        name: dayNames[day.getDay()],
-        number: day.getDate(),
-        dateString: day.toISOString().split("T")[0],
-      });
-    }
-    return weekDays;
-  };
-
   const handleCall = () => {
     if (trajet?.driverPhone) {
       Linking.openURL(`tel:${trajet.driverPhone}`);
+    }
+  };
+
+  const getStatusIcon = () => {
+    if (!trajet) return "circle-o";
+    switch (trajet.status) {
+      case "confirme":
+        return "check-circle";
+      case "en_attente":
+        return "clock-o";
+      case "en_cours":
+        return "spinner";
+      case "termine":
+        return "check-circle-o";
+      case "annule":
+        return "times-circle";
+      default:
+        return "circle-o";
     }
   };
 
@@ -277,7 +291,8 @@ export const TrajetDetailScreen: React.FC = () => {
     );
   }
 
-  const weekDays = getWeekDays();
+  const weekDays = getWeekDaysFromDate(selectedDate);
+  const statusColor = TRIP_STATUS_COLORS[trajet.status];
 
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -375,8 +390,10 @@ export const TrajetDetailScreen: React.FC = () => {
 
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <ScrollView
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
           contentContainerStyle={styles.scrollContent}
+          nestedScrollEnabled={true}
+          bounces={true}
         >
           {/* Week Days Selector */}
           <View style={styles.weekContainer}>
@@ -412,11 +429,51 @@ export const TrajetDetailScreen: React.FC = () => {
             })}
           </View>
 
-          {/* Trip Details Section */}
           <View style={styles.detailsSection}>
             <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>
               Détails du trajet
             </Text>
+
+            <View style={[styles.statusDetailRow, dynamicStyles.detailRow]}>
+              <View style={[styles.detailIcon, dynamicStyles.detailIcon]}>
+                <FontAwesome
+                  name={getStatusIcon()}
+                  size={14}
+                  color={statusColor}
+                />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={[styles.detailLabel, dynamicStyles.detailLabel]}>
+                  Statut
+                </Text>
+                <View
+                  style={[
+                    styles.statusDetailBadge,
+                    { backgroundColor: statusColor + "20" },
+                  ]}
+                >
+                  <Text
+                    style={[styles.statusDetailText, { color: statusColor }]}
+                  >
+                    {TRIP_STATUS_LABELS[trajet.status]}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={[styles.detailRow, dynamicStyles.detailRow]}>
+              <View style={[styles.detailIcon, dynamicStyles.detailIcon]}>
+                <FontAwesome name="arrows-h" size={14} color={colors.primary} />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={[styles.detailLabel, dynamicStyles.detailLabel]}>
+                  Type de trajet
+                </Text>
+                <Text style={[styles.detailValue, dynamicStyles.detailValue]}>
+                  {TRIP_DIRECTION_LABELS[trajet.direction]}
+                </Text>
+              </View>
+            </View>
 
             {detailItems.map((item, index) => (
               <View
@@ -446,7 +503,6 @@ export const TrajetDetailScreen: React.FC = () => {
             ))}
           </View>
 
-          {/* Driver Card Section */}
           <View style={styles.driverSection}>
             <View style={[styles.driverCard, dynamicStyles.driverCard]}>
               <View style={styles.driverHeader}>
@@ -485,7 +541,6 @@ export const TrajetDetailScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Call Button - Separated */}
           <View style={styles.callButtonContainer}>
             <TouchableOpacity
               style={styles.callButton}

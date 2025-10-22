@@ -1,4 +1,3 @@
-// screens/innerApplication/planification/components/TripCard.tsx
 import ConditionalComponent from "@/shared/components/conditionalComponent/conditionalComponent";
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
@@ -12,10 +11,13 @@ import {
 } from "react-native";
 import { useThemeColors } from "../../../../hooks/useTheme";
 import {
+  TRIP_DIRECTION_LABELS,
+  TRIP_STATUS_COLORS,
   TRIP_STATUS_LABELS,
   TRIP_TYPE_COLORS,
   Trip,
 } from "../../../../shared/types/planification";
+import { formatDateDisplay, formatTime } from "../utils/planningUtils";
 
 interface TripCardProps {
   trip: Trip;
@@ -32,46 +34,13 @@ export const TripCard: React.FC<TripCardProps> = ({
 }) => {
   const colors = useThemeColors();
 
-  const formatTime = (time: string) => {
-    return time.substring(0, 5);
-  };
-
-  const formatDate = (date: string) => {
-    const dateObj = new Date(date);
-    const day = dateObj.getDate().toString().padStart(2, "0");
-    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
-    const year = dateObj.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
   const getStatusColor = () => {
-    switch (trip.status) {
-      case "prevu":
-        return colors.success;
-      case "en_cours":
-        return colors.info;
-      case "termine":
-        return colors.success;
-      case "annule":
-        return colors.error;
-      default:
-        return colors.textSecondary;
-    }
+    return TRIP_STATUS_COLORS[trip.status] || colors.textSecondary;
   };
 
   const getStatusBackgroundColor = () => {
-    switch (trip.status) {
-      case "prevu":
-        return colors.success + "15";
-      case "en_cours":
-        return colors.info + "15";
-      case "termine":
-        return colors.success + "15";
-      case "annule":
-        return colors.error + "15";
-      default:
-        return colors.textSecondary + "15";
-    }
+    const statusColor = TRIP_STATUS_COLORS[trip.status] || colors.textSecondary;
+    return statusColor + "15";
   };
 
   const typeColor = TRIP_TYPE_COLORS[trip.type];
@@ -79,14 +48,16 @@ export const TripCard: React.FC<TripCardProps> = ({
   const styles = StyleSheet.create({
     container: {
       flexDirection: "row",
-      alignItems: "flex-start",
-      padding: 16,
+      alignItems: "center",
+      paddingVertical: 14,
+      paddingHorizontal: 14,
       marginHorizontal: 16,
       marginVertical: 6,
       borderRadius: 12,
       backgroundColor: colors.card,
       borderLeftWidth: 4,
       borderLeftColor: typeColor,
+      minHeight: 85,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
@@ -105,68 +76,80 @@ export const TripCard: React.FC<TripCardProps> = ({
       }),
     },
     iconContainer: {
-      width: 48,
-      height: 48,
-      borderRadius: 12,
+      width: 50,
+      height: 50,
+      borderRadius: 10,
+      backgroundColor: typeColor + "15",
       alignItems: "center",
       justifyContent: "center",
       marginRight: 12,
-      backgroundColor: colors.primary + "15",
     },
-    contentContainer: {
+    contentSection: {
       flex: 1,
       justifyContent: "center",
     },
-    header: {
+    topRow: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 8,
+      marginBottom: 6,
     },
-    dateTimeContainer: {
-      flex: 1,
-    },
-    dateText: {
+    title: {
       fontSize: 16,
       fontWeight: "700",
       color: colors.text,
-      marginBottom: 2,
+      flex: 1,
+      marginRight: 8,
+    },
+    timeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 6,
     },
     timeText: {
       fontSize: 14,
-      fontWeight: "400",
-      color: colors.textSecondary,
-    },
-    statusBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 8,
-      marginLeft: 8,
-    },
-    statusText: {
-      fontSize: 12,
       fontWeight: "600",
+      color: colors.text,
+      marginRight: 8,
+    },
+    directionBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      backgroundColor: colors.backgroundSecondary,
+    },
+    directionText: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: colors.textSecondary,
     },
     routeRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 8,
-    },
-    routeIcon: {
-      marginRight: 6,
     },
     routeText: {
-      fontSize: 14,
+      fontSize: 13,
       color: colors.textSecondary,
-      flex: 1,
+      marginRight: 4,
     },
-    footer: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    footerText: {
+    arrow: {
       fontSize: 13,
       color: colors.textTertiary,
+      marginHorizontal: 4,
+    },
+    rightSection: {
+      alignItems: "flex-end",
+      justifyContent: "center",
+      marginLeft: 8,
+    },
+    statusBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+    },
+    statusText: {
+      fontSize: 11,
+      fontWeight: "600",
+      textAlign: "center",
     },
   });
 
@@ -176,56 +159,63 @@ export const TripCard: React.FC<TripCardProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* Left Icon */}
+      {/* Icon Container */}
       <View style={styles.iconContainer}>
-        <FontAwesome name="road" size={20} color={colors.primary} />
+        <FontAwesome name="road" size={22} color={typeColor} />
       </View>
 
-      {/* Content */}
-      <View style={styles.contentContainer}>
-        {/* Header: Date/Time + Status */}
-        <View style={styles.header}>
-          <View style={styles.dateTimeContainer}>
-            <ConditionalComponent isValid={showDate}>
-              <Text style={styles.dateText}>{formatDate(trip.date)}</Text>
-            </ConditionalComponent>
-            <ConditionalComponent isValid={!showDate}>
-              <Text style={styles.dateText}>{formatTime(trip.startTime)}</Text>
-            </ConditionalComponent>
-            <Text style={styles.timeText}>
-              {trip.startLocation} → {trip.endLocation}
-            </Text>
-          </View>
-
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: getStatusBackgroundColor() },
-            ]}
-          >
-            <Text style={[styles.statusText, { color: getStatusColor() }]}>
-              {TRIP_STATUS_LABELS[trip.status]}
-            </Text>
-          </View>
-        </View>
-
-        {/* Route Information */}
-        <View style={styles.routeRow}>
-          <FontAwesome
-            name="map-marker"
-            size={12}
-            color={colors.textTertiary}
-            style={styles.routeIcon}
-          />
-          <Text style={styles.routeText} numberOfLines={1}>
+      {/* Content Section */}
+      <View style={styles.contentSection}>
+        {/* Title */}
+        <View style={styles.topRow}>
+          <Text style={styles.title} numberOfLines={1}>
             {trip.title}
           </Text>
         </View>
 
-        {/* Footer Info */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            {showDate ? formatDate(trip.date) : trip.notes || "Aller"}
+        <View style={styles.timeRow}>
+          <ConditionalComponent isValid={showDate}>
+            <Text style={styles.timeText}>
+              {formatDateDisplay(trip.date)} - {formatTime(trip.startTime)}
+            </Text>
+          </ConditionalComponent>
+
+          <ConditionalComponent isValid={!showDate}>
+            <Text style={styles.timeText}>
+              {formatTime(trip.startTime)} - {formatTime(trip.endTime)}
+            </Text>
+          </ConditionalComponent>
+        </View>
+
+        {/* Route */}
+        <View style={styles.routeRow}>
+          <Text style={styles.routeText} numberOfLines={1}>
+            {trip.startLocation}
+          </Text>
+          <Text style={styles.arrow}>→</Text>
+          <Text style={[styles.routeText, { flex: 1 }]} numberOfLines={1}>
+            {trip.endLocation}
+          </Text>
+        </View>
+
+        {/* Direction Badge Below Route */}
+        <View style={styles.directionBadge}>
+          <Text style={styles.directionText}>
+            {TRIP_DIRECTION_LABELS[trip.direction]}
+          </Text>
+        </View>
+      </View>
+
+      {/* Right Section: Status */}
+      <View style={styles.rightSection}>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusBackgroundColor() },
+          ]}
+        >
+          <Text style={[styles.statusText, { color: getStatusColor() }]}>
+            {TRIP_STATUS_LABELS[trip.status]}
           </Text>
         </View>
       </View>

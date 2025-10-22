@@ -1,12 +1,13 @@
-// screens/innerApplication/planification/components/MonthCalendarView.tsx
 import ConditionalComponent from "@/shared/components/conditionalComponent/conditionalComponent";
 import React from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { useThemeColors } from "../../../../hooks/useTheme";
 import { TRIP_TYPE_COLORS, Trip } from "../../../../shared/types/planification";
 import { usePlanificationStore } from "../../../../store/planificationStore";
 import { AnimatedTripCard } from "./AnimatedTripCard";
+import { EmptyTripState } from "./EmptyTripState";
+import { TripsSectionHeader } from "./TripsSectionHeader";
 
 interface MonthCalendarViewProps {
   selectedDate: string;
@@ -22,7 +23,7 @@ export const MonthCalendarView: React.FC<MonthCalendarViewProps> = ({
   onTripPress,
 }) => {
   const colors = useThemeColors();
-  const { getTripsForDate } = usePlanificationStore(); // ✅ Use store method
+  const { getTripsForDate } = usePlanificationStore();
 
   const getMarkedDates = () => {
     const marked: any = {};
@@ -90,7 +91,6 @@ export const MonthCalendarView: React.FC<MonthCalendarViewProps> = ({
     textDayHeaderFontSize: 14,
   };
 
-  // ✅ Get trips for selected date from store
   const selectedTrips = getTripsForDate(selectedDate);
 
   const styles = StyleSheet.create({
@@ -115,77 +115,6 @@ export const MonthCalendarView: React.FC<MonthCalendarViewProps> = ({
     tripsSection: {
       marginTop: 8,
     },
-    tripsSectionHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      backgroundColor: colors.surface,
-      marginHorizontal: 16,
-      borderRadius: 12,
-      marginBottom: 8,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: colors.isDark ? 0.3 : 0.08,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 4,
-        },
-      }),
-    },
-    sectionTitle: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: colors.text,
-    },
-    sectionSubtitle: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-    emptyState: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 60,
-      paddingHorizontal: 32,
-      backgroundColor: colors.surface,
-      marginHorizontal: 16,
-      borderRadius: 16,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: colors.isDark ? 0.3 : 0.08,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 4,
-        },
-      }),
-    },
-    emptyIcon: {
-      fontSize: 48,
-      marginBottom: 16,
-      opacity: 0.5,
-    },
-    emptyTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 8,
-      textAlign: "center",
-    },
-    emptyText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: "center",
-      lineHeight: 20,
-    },
   });
 
   return (
@@ -206,35 +135,15 @@ export const MonthCalendarView: React.FC<MonthCalendarViewProps> = ({
         />
       </View>
 
-      {/* Trips section */}
       <View style={styles.tripsSection}>
-        <View style={styles.tripsSectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>
-              Trajets du{" "}
-              {new Date(selectedDate).toLocaleDateString("fr-FR", {
-                day: "numeric",
-                month: "long",
-              })}
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              {selectedTrips.length} trajet
-              {selectedTrips.length !== 1 ? "s" : ""}
-            </Text>
-          </View>
-        </View>
+        <TripsSectionHeader
+          selectedDate={selectedDate}
+          tripCount={selectedTrips.length}
+        />
 
         <ConditionalComponent
           isValid={selectedTrips.length > 0}
-          defaultComponent={
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>🚌</Text>
-              <Text style={styles.emptyTitle}>Aucun trajet</Text>
-              <Text style={styles.emptyText}>
-                Aucun trajet prévu pour cette date.
-              </Text>
-            </View>
-          }
+          defaultComponent={<EmptyTripState />}
         >
           {selectedTrips.map((trip, index) => (
             <AnimatedTripCard
