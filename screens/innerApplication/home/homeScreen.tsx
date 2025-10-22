@@ -43,7 +43,6 @@ export const HomeScreen: React.FC = () => {
       })
     );
 
-    //test
     setTimeout(() => {
       Animated.parallel(cardAnimationSequence).start();
     }, 300);
@@ -54,13 +53,11 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handlePlanningPress = () => {
-    // TODO: Add navigation route
     router.push("./planification");
   };
 
   const handleSuiviCoursesPress = () => {
-    // TODO: Add navigation route
-    console.log("Suivi des courses pressed");
+    router.push("./tracking");
   };
 
   const handleHoraireScolaritePress = () => {

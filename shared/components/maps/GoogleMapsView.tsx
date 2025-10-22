@@ -10,7 +10,7 @@ import MapView, {
 } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { useThemeColors } from "../../../hooks/useTheme";
-import { Location, PointOfInterest, Trip } from "../../types/geolocation";
+import { Location, PointOfInterest, Trip } from "../../types/gelocation";
 
 interface GoogleMapsViewProps {
   currentLocation: Location | null;
