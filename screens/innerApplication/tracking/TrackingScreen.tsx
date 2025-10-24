@@ -1,11 +1,8 @@
-// screens/innerApplication/tracking/TrackingScreen.tsx
-
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -14,9 +11,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
-import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { GoogleMapsView } from "../../../shared/components/maps/GoogleMapsView";
 import { Header } from "../../../shared/components/ui/Header";
+import { Sidebar } from "../../../shared/components/ui/Sidebar";
 import { useTrackingStore } from "../../../store/trackingStore";
 
 // Import types from tracking
@@ -26,10 +23,24 @@ import type {
   Trip,
 } from "../../../shared/types/tracking";
 
+// Import new card components
+import {
+  DriverArrivalCard,
+  MinimizedDriverCard,
+  TripCompletedCard,
+} from "./components";
+
 export const TrackingScreen: React.FC = () => {
   const { colors } = useTheme();
-  const [showDriverDetails, setShowDriverDetails] = useState(false);
-  const slideAnim = useRef(new Animated.Value(300)).current;
+  const [isCardMinimized, setIsCardMinimized] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+
+  // Animation values for smooth card transitions
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  // Map ref for direct control
+  const mapRef = useRef<any>(null);
 
   const {
     currentTrip,
@@ -44,33 +55,116 @@ export const TrackingScreen: React.FC = () => {
     fetchCurrentTrip();
   }, []);
 
-  useEffect(() => {
-    if (showDriverDetails) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
-    } else {
-      Animated.spring(slideAnim, {
-        toValue: 300,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
-    }
-  }, [showDriverDetails, slideAnim]);
+  const handleOpenSidebar = () => {
+    setIsSidebarVisible(true);
+  };
 
-  const handleCallDriver = () => {
-    if (currentTrip?.chauffeur.telephone) {
-      const phoneNumber = currentTrip.chauffeur.telephone;
-      Linking.openURL(`tel:${phoneNumber}`);
-    }
+  const handleCloseSidebar = () => {
+    setIsSidebarVisible(false);
+  };
+
+  const sidebarItems = [
+    {
+      id: "tracking",
+      label: "Suivi en temps réel",
+      icon: "location-arrow" as const,
+      onPress: () => {
+        handleCloseSidebar();
+      },
+      isActive: true,
+    },
+    {
+      id: "history",
+      label: "Historique de trajet",
+      icon: "history" as const,
+      onPress: () => {
+        handleCloseSidebar();
+        router.push("/(tabs)/planification"); // or wherever your tracking history is
+      },
+    },
+  ];
+
+  const handleMinimizeCard = () => {
+    // Fade out and scale down animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // After animation, switch to minimized card
+      setIsCardMinimized(true);
+      // Fade in the minimized card
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 10,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  };
+
+  const handleExpandCard = () => {
+    // Fade out and scale down animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // After animation, switch to expanded card
+      setIsCardMinimized(false);
+      // Fade in the expanded card
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 10,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
   };
 
   const handleCenterOnVehicle = () => {
-    centerOnVehicle();
+    // Directly animate to the driver's current position
+    if (mapRef.current && currentTrip?.positionActuelle) {
+      const region = {
+        latitude: currentTrip.positionActuelle.latitude,
+        longitude: currentTrip.positionActuelle.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      mapRef.current.animateToRegion(region, 1000);
+    }
+  };
+
+  const handleMapReady = (ref: React.RefObject<any>) => {
+    mapRef.current = ref.current;
   };
 
   const handleChangeMapView = () => {
@@ -96,6 +190,16 @@ export const TrackingScreen: React.FC = () => {
     return `${distance.toFixed(1)} km`;
   };
 
+  // Determine if trip is completed
+  const isTripCompleted =
+    currentTrip?.statut === "Terminé" || currentTrip?.statut === "Termine";
+
+  // Determine if user has been picked up (driver is en route to destination)
+  // For now, we'll assume if status is "En route" and there's a current position, driver is on the way
+  // You can enhance this logic based on your backend data
+  const isUserPickedUp =
+    currentTrip?.statut === "En route" && currentTrip?.positionActuelle;
+
   // Convert tracking data to GoogleMapsView format
   const currentLocation: Location | null = currentTrip?.positionActuelle
     ? {
@@ -105,6 +209,41 @@ export const TrackingScreen: React.FC = () => {
         timestamp: currentTrip.positionActuelle.timestamp.toISOString(),
       }
     : null;
+
+  // Build trip points based on trip phase
+  const buildTripPoints = () => {
+    if (!currentTrip) return [];
+
+    // If user hasn't been picked up yet: show only pickup location
+    // (driver position is shown separately as currentLocation marker)
+    if (!isUserPickedUp) {
+      return [
+        {
+          id: "pickup",
+          type: "pickup" as const,
+          coordinates: {
+            latitude: currentTrip.pointDepart.latitude,
+            longitude: currentTrip.pointDepart.longitude,
+          },
+          address: currentTrip.pointDepart.address || "Point de ramassage",
+        },
+      ];
+    }
+
+    // If user is picked up: show only destination
+    // (current position is shown as currentLocation marker)
+    return [
+      {
+        id: "destination",
+        type: "destination" as const,
+        coordinates: {
+          latitude: currentTrip.pointArrivee.latitude,
+          longitude: currentTrip.pointArrivee.longitude,
+        },
+        address: currentTrip.pointArrivee.address || "Destination",
+      },
+    ];
+  };
 
   const trips: Trip[] = currentTrip
     ? [
@@ -126,35 +265,7 @@ export const TrackingScreen: React.FC = () => {
           routePrevu: currentTrip.routePrevu,
           routeEnCours: currentTrip.routeEnCours,
           alertes: currentTrip.alertes,
-          points: currentTrip.points || [
-            {
-              id: "start",
-              type: "pickup",
-              coordinates: {
-                latitude: currentTrip.pointDepart.latitude,
-                longitude: currentTrip.pointDepart.longitude,
-              },
-              address: currentTrip.pointDepart.address || "",
-            },
-            {
-              id: "current",
-              type: "waypoint",
-              coordinates: {
-                latitude: currentTrip.positionActuelle!.latitude,
-                longitude: currentTrip.positionActuelle!.longitude,
-              },
-              address: currentTrip.positionActuelle!.address || "",
-            },
-            {
-              id: "end",
-              type: "destination",
-              coordinates: {
-                latitude: currentTrip.pointArrivee.latitude,
-                longitude: currentTrip.pointArrivee.longitude,
-              },
-              address: currentTrip.pointArrivee.address || "",
-            },
-          ],
+          points: buildTripPoints(),
           customerInfo: currentTrip.customerInfo,
           notes: currentTrip.notes,
           createdAt: currentTrip.createdAt,
@@ -206,182 +317,6 @@ export const TrackingScreen: React.FC = () => {
           elevation: 4,
         },
       }),
-    },
-    infoBar: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: colors.card,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: Platform.OS === "ios" ? 34 : 20,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 8,
-        },
-      }),
-    },
-    driverSection: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 16,
-    },
-    driverPhoto: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: colors.primary + "20",
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 12,
-    },
-    driverPhotoImage: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-    },
-    driverInfo: {
-      flex: 1,
-    },
-    driverName: {
-      fontSize: 18,
-      fontWeight: "700",
-      color: colors.text,
-      marginBottom: 4,
-    },
-    statusBadge: {
-      alignSelf: "flex-start",
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-      backgroundColor: colors.success + "20",
-    },
-    statusText: {
-      fontSize: 12,
-      fontWeight: "600",
-      color: colors.success,
-    },
-    callButton: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: colors.primary,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    infoRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    infoLabel: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      fontWeight: "500",
-    },
-    infoValue: {
-      fontSize: 16,
-      color: colors.text,
-      fontWeight: "600",
-    },
-    detailsButton: {
-      marginTop: 16,
-      paddingVertical: 14,
-      backgroundColor: colors.primary + "15",
-      borderRadius: 12,
-      alignItems: "center",
-    },
-    detailsButtonText: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: colors.primary,
-    },
-    driverDetailsModal: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: colors.card,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: Platform.OS === "ios" ? 34 : 20,
-      maxHeight: "70%",
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 12,
-        },
-        android: {
-          elevation: 12,
-        },
-      }),
-    },
-    modalHandle: {
-      width: 40,
-      height: 4,
-      backgroundColor: colors.border,
-      borderRadius: 2,
-      alignSelf: "center",
-      marginBottom: 20,
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: colors.text,
-      marginBottom: 20,
-    },
-    detailSection: {
-      marginBottom: 24,
-    },
-    sectionTitle: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: colors.textSecondary,
-      marginBottom: 12,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    detailRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingVertical: 10,
-    },
-    detailLabel: {
-      fontSize: 15,
-      color: colors.textSecondary,
-    },
-    detailValue: {
-      fontSize: 15,
-      fontWeight: "600",
-      color: colors.text,
-    },
-    closeButton: {
-      marginTop: 16,
-      paddingVertical: 14,
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      alignItems: "center",
-    },
-    closeButtonText: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: "#ffffff",
     },
     loadingContainer: {
       flex: 1,
@@ -436,10 +371,17 @@ export const TrackingScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <Header
         leftIcon={{
-          icon: "chevron-left",
-          onPress: () => router.back(),
+          icon: "bars",
+          onPress: handleOpenSidebar,
         }}
         title="Suivi en temps réel"
+        rightIcons={[
+          {
+            icon: "bell",
+            onPress: () => router.push("./notifications?returnTo=/tracking"),
+            badge: 3,
+          },
+        ]}
       />
 
       <View style={styles.mapContainer}>
@@ -451,9 +393,10 @@ export const TrackingScreen: React.FC = () => {
           mapType={getGoogleMapsViewType()}
           showTraffic={settings.map.showTraffic}
           centerOnLocation={settings.map.autoFollow}
+          onMapReady={handleMapReady}
         />
 
-        {/* Contrôles flottants */}
+        {/* Floating Controls */}
         <View style={styles.floatingControls}>
           <TouchableOpacity
             style={styles.controlButton}
@@ -472,137 +415,65 @@ export const TrackingScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Barre d'informations */}
-        <View style={styles.infoBar}>
-          {/* Section chauffeur */}
-          <View style={styles.driverSection}>
-            <View style={styles.driverPhoto}>
-              <Ionicons name="person" size={32} color={colors.primary} />
-            </View>
-
-            <View style={styles.driverInfo}>
-              <Text style={styles.driverName}>
-                {currentTrip.chauffeur.prenom} {currentTrip.chauffeur.nom}
-              </Text>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusText}>{currentTrip.statut}</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.callButton}
-              onPress={handleCallDriver}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="call" size={24} color="#ffffff" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Informations du trajet */}
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Arrivée estimée</Text>
-            <Text style={styles.infoValue}>
-              {formatTime(currentTrip.heureArriveeEstimee)}
-            </Text>
-          </View>
-
-          <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-            <Text style={styles.infoLabel}>Distance restante</Text>
-            <Text style={styles.infoValue}>
-              {formatDistance(currentTrip.distanceRestante || 0)}
-            </Text>
-          </View>
-
-          {/* Bouton détails */}
-          <TouchableOpacity
-            style={styles.detailsButton}
-            onPress={() => setShowDriverDetails(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.detailsButtonText}>
-              Voir détails du chauffeur et véhicule
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Modal détails chauffeur/véhicule */}
-        <ConditionalComponent isValid={showDriverDetails}>
+        {/* Bottom Cards - Conditional rendering based on trip status */}
+        {isTripCompleted ? (
+          // Show Trip Completed Card
+          <TripCompletedCard
+            arrivalTime={formatTime(
+              currentTrip.heureArriveeReelle || currentTrip.heureArriveeEstimee
+            )}
+            phoneNumber={currentTrip.chauffeur.telephone}
+            onClose={() => router.back()}
+          />
+        ) : (
+          // Show Driver Cards with smooth animations
           <Animated.View
-            style={[
-              styles.driverDetailsModal,
-              {
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
+            style={{
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            }}
           >
-            <TouchableOpacity onPress={() => setShowDriverDetails(false)}>
-              <View style={styles.modalHandle} />
-            </TouchableOpacity>
-
-            <Text style={styles.modalTitle}>Détails</Text>
-
-            {/* Informations chauffeur */}
-            <View style={styles.detailSection}>
-              <Text style={styles.sectionTitle}>Chauffeur</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Nom complet</Text>
-                <Text style={styles.detailValue}>
-                  {currentTrip.chauffeur.prenom} {currentTrip.chauffeur.nom}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Téléphone</Text>
-                <Text style={styles.detailValue}>
-                  {currentTrip.chauffeur.telephone}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Statut</Text>
-                <Text style={styles.detailValue}>
-                  {currentTrip.chauffeur.statut}
-                </Text>
-              </View>
-            </View>
-
-            {/* Informations véhicule */}
-            <View style={styles.detailSection}>
-              <Text style={styles.sectionTitle}>Véhicule</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Marque</Text>
-                <Text style={styles.detailValue}>
-                  {currentTrip.vehicule.marque}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Modèle</Text>
-                <Text style={styles.detailValue}>
-                  {currentTrip.vehicule.modele}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Plaque</Text>
-                <Text style={styles.detailValue}>
-                  {currentTrip.vehicule.plaque}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Couleur</Text>
-                <Text style={styles.detailValue}>
-                  {currentTrip.vehicule.couleur}
-                </Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowDriverDetails(false)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.closeButtonText}>Fermer</Text>
-            </TouchableOpacity>
+            {isCardMinimized ? (
+              <MinimizedDriverCard
+                driverName={`${currentTrip.chauffeur.prenom} ${currentTrip.chauffeur.nom}`}
+                driverPhoto={currentTrip.chauffeur.photo}
+                status={currentTrip.statut as string}
+                estimatedTime={`${Math.round(
+                  (currentTrip.heureArriveeEstimee.getTime() - Date.now()) /
+                    60000
+                )} min`}
+                vehicleBrand={currentTrip.vehicule.marque}
+                vehicleModel={currentTrip.vehicule.modele}
+                licensePlate={currentTrip.vehicule.plaque}
+                onExpand={handleExpandCard}
+              />
+            ) : (
+              <DriverArrivalCard
+                driverName={`${currentTrip.chauffeur.prenom} ${currentTrip.chauffeur.nom}`}
+                driverPhoto={currentTrip.chauffeur.photo}
+                status={currentTrip.statut as string}
+                estimatedTime={`${Math.round(
+                  (currentTrip.heureArriveeEstimee.getTime() - Date.now()) /
+                    60000
+                )} min`}
+                vehicleBrand={currentTrip.vehicule.marque}
+                vehicleModel={currentTrip.vehicule.modele}
+                licensePlate={currentTrip.vehicule.plaque}
+                phoneNumber={currentTrip.chauffeur.telephone}
+                onMinimize={handleMinimizeCard}
+              />
+            )}
           </Animated.View>
-        </ConditionalComponent>
+        )}
       </View>
+
+      {/* Sidebar */}
+      <Sidebar
+        visible={isSidebarVisible}
+        onClose={handleCloseSidebar}
+        items={sidebarItems}
+        title="Menu"
+      />
     </SafeAreaView>
   );
 };

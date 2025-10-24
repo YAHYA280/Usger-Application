@@ -24,6 +24,7 @@ interface GoogleMapsViewProps {
   centerOnLocation?: boolean;
   onLocationUpdate?: (location: Location) => void;
   onTripPointClick?: (tripId: string, pointId: string) => void;
+  onMapReady?: (mapRef: React.RefObject<MapView>) => void;
   style?: any;
 }
 
@@ -39,6 +40,7 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
   centerOnLocation = false,
   onLocationUpdate,
   onTripPointClick,
+  onMapReady: onMapReadyCallback,
   style,
 }) => {
   const colors = useThemeColors();
@@ -188,7 +190,7 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
       case "destination":
         return "location";
       case "waypoint":
-        return "person";
+        return "car";
       default:
         return "location";
     }
@@ -214,15 +216,23 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
   );
 
   const renderDirections = () => {
-    if (!currentTrip || !currentTrip.points || currentTrip.points.length < 2) {
+    // Need currentLocation (driver) and at least one trip point to draw route
+    if (!currentLocation || !currentTrip || !currentTrip.points || currentTrip.points.length < 1) {
       return null;
     }
 
-    const origin = currentTrip.points[0].coordinates;
-    const destination =
-      currentTrip.points[currentTrip.points.length - 1].coordinates;
+    // Origin is always the driver's current location
+    const origin = {
+      latitude: currentLocation.latitude,
+      longitude: currentLocation.longitude,
+    };
+
+    // Destination is the target (pickup or final destination)
+    const destination = currentTrip.points[currentTrip.points.length - 1].coordinates;
+
+    // Waypoints are any intermediate points (if any)
     const waypoints = currentTrip.points
-      .slice(1, -1)
+      .slice(0, -1)
       .map((point) => point.coordinates);
 
     return (
@@ -271,7 +281,13 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
     }
   }, [centerOnLocation, currentLocation, isMapReady]);
 
-  const handleMapReady = () => setIsMapReady(true);
+  const handleMapReady = () => {
+    setIsMapReady(true);
+    // Pass the map ref to parent component
+    if (onMapReadyCallback) {
+      onMapReadyCallback(mapRef);
+    }
+  };
   const handleTripPointPress = (tripId: string, pointId: string) =>
     onTripPointClick?.(tripId, pointId);
 
@@ -408,13 +424,13 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
               latitude: currentLocation.latitude,
               longitude: currentLocation.longitude,
             }}
-            title="Ma position"
+            title="Position du chauffeur"
             description={currentLocation.address}
           >
             <View
-              style={[styles.customMarker, { backgroundColor: colors.success }]}
+              style={[styles.customMarker, { backgroundColor: colors.primary }]}
             >
-              <Ionicons name="person" size={18} color="white" />
+              <Ionicons name="car" size={18} color="white" />
             </View>
           </Marker>
         )}

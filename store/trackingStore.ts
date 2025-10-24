@@ -92,10 +92,10 @@ const mockTrips: TrackingTrip[] = [
       address: "Médina de Tanger",
     },
     positionActuelle: {
-      latitude: 35.76705935231749,
-      longitude: -5.793577167187562,
+      latitude: 35.75912034567123,
+      longitude: -5.796821098765432,
       timestamp: new Date(),
-      address: "Avenue Mohammed V, Tanger",
+      address: "En route vers Avenue Mohammed V, Tanger",
     },
     statut: "En cours",
     heureDepart: new Date(Date.now() - 20 * 60000),
@@ -147,8 +147,8 @@ const mockTrips: TrackingTrip[] = [
       type: "encours",
       coordinates: [
         {
-          latitude: 35.76705935231749,
-          longitude: -5.793577167187562,
+          latitude: 35.75912034567123,
+          longitude: -5.796821098765432,
           timestamp: new Date(),
         },
         {
@@ -762,15 +762,28 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
 
   // Map Actions
   centerOnVehicle: () => {
+    // Toggle autoFollow to trigger the centering effect
     set((state) => ({
       settings: {
         ...state.settings,
         map: {
           ...state.settings.map,
-          autoFollow: true,
+          autoFollow: !state.settings.map.autoFollow,
         },
       },
     }));
+    // Set it back to true after a short delay to enable continuous auto-follow
+    setTimeout(() => {
+      set((state) => ({
+        settings: {
+          ...state.settings,
+          map: {
+            ...state.settings.map,
+            autoFollow: true,
+          },
+        },
+      }));
+    }, 100);
   },
 
   changeMapViewMode: (mode: MapViewMode) => {
@@ -890,3 +903,72 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
     set({ error: null });
   },
 }));
+
+// Simulation: Animate driver moving towards pickup location
+let simulationInterval: NodeJS.Timeout | null = null;
+
+export const startDriverSimulation = () => {
+  if (simulationInterval) {
+    clearInterval(simulationInterval);
+  }
+
+  simulationInterval = setInterval(() => {
+    const { currentTrip } = useTrackingStore.getState();
+
+    if (!currentTrip || !currentTrip.positionActuelle) return;
+
+    // Get target (pickup location)
+    const target = currentTrip.pointDepart;
+    const current = currentTrip.positionActuelle;
+
+    // Calculate direction towards target
+    const latDiff = target.latitude - current.latitude;
+    const lngDiff = target.longitude - current.longitude;
+
+    // Calculate distance
+    const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+
+    // If very close to target (within ~50 meters), stop or slow down
+    if (distance < 0.0005) {
+      // Driver has arrived at pickup, stop simulation
+      if (simulationInterval) {
+        clearInterval(simulationInterval);
+        simulationInterval = null;
+      }
+      return;
+    }
+
+    // Move a small step towards target (simulate ~100-200 meters per update)
+    const stepSize = 0.0008; // Approximately 100 meters
+    const progress = Math.min(stepSize / distance, 1);
+
+    const newLat = current.latitude + (latDiff * progress);
+    const newLng = current.longitude + (lngDiff * progress);
+
+    // Update position
+    useTrackingStore.setState((state) => {
+      if (!state.currentTrip) return state;
+
+      return {
+        currentTrip: {
+          ...state.currentTrip,
+          positionActuelle: {
+            ...state.currentTrip.positionActuelle!,
+            latitude: newLat,
+            longitude: newLng,
+            timestamp: new Date(),
+          },
+          // Update distance remaining
+          distanceRestante: Math.max(0, (state.currentTrip.distanceRestante || 0) - 0.1),
+        },
+      };
+    });
+  }, 2000); // Update every 2 seconds
+};
+
+export const stopDriverSimulation = () => {
+  if (simulationInterval) {
+    clearInterval(simulationInterval);
+    simulationInterval = null;
+  }
+};
