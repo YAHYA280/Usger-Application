@@ -1,5 +1,3 @@
-// shared/types/tracking.ts
-
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -7,10 +5,9 @@ export interface Coordinates {
 
 export interface Location extends Coordinates {
   address?: string;
-  timestamp?: string; // Changed from string | Date to just string
+  timestamp?: string;
 }
 
-// Tracking specific types
 export type TrackingStatus = "En route" | "En attente" | "Terminé" | "Retardé";
 export type TripStatus = "A venir" | "En cours" | "Termine" | "Annule";
 export type DriverAvailabilityStatus =
@@ -48,8 +45,8 @@ export interface TrackingRoute {
   id: string;
   type: "prevu" | "encours";
   coordinates: TrackingLocation[];
-  distance: number; // en kilomètres
-  duration: number; // en minutes
+  distance: number;
+  duration: number;
   color: string;
 }
 
@@ -93,25 +90,24 @@ export interface TrackingAlert {
   coordinates?: Coordinates;
 }
 
-// Unified Trip structure that works for both real-time tracking and history
 export interface TrackingTrip {
   id: string;
-  nom: string; // Trip name/title
+  nom: string;
   pointDepart: TrackingLocation;
   pointArrivee: TrackingLocation;
-  positionActuelle?: TrackingLocation; // Current position (for active trips)
+  positionActuelle?: TrackingLocation;
   statut: TrackingStatus | TripStatus;
   heureDepart: Date;
   heureArriveeEstimee: Date;
   heureArriveeReelle?: Date;
-  distanceParcourue?: number; // en kilomètres
-  distanceRestante?: number; // en kilomètres
-  distance: number; // Total distance
+  distanceParcourue?: number;
+  distanceRestante?: number;
+  distance: number;
   chauffeur: DriverInfo;
   vehicule: VehicleInfo;
   routePrevu?: TrackingRoute;
   routeEnCours?: TrackingRoute;
-  points?: TripPoint[]; // Waypoints for multi-stop trips
+  points?: TripPoint[];
   alertes?: TrackingAlert[];
   customerInfo?: {
     name: string;
@@ -122,7 +118,6 @@ export interface TrackingTrip {
   updatedAt: Date;
 }
 
-// Export Trip as alias for TrackingTrip for compatibility
 export type Trip = TrackingTrip;
 
 export interface TrackingFilters {
@@ -138,14 +133,14 @@ export interface MapSettings {
   showTraffic: boolean;
   showPOI: boolean;
   autoFollow: boolean;
-  updateInterval: number; // seconds
+  updateInterval: number;
 }
 
 export interface NotificationSettings {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
   notificationsEnabled: boolean;
-  approachDistance: number; // meters
+  approachDistance: number;
   routeChangeAlerts: boolean;
   missionAlerts: boolean;
 }
@@ -169,26 +164,15 @@ export interface DirectionsResult {
 }
 
 export interface TrackingState {
-  // Real-time tracking
   currentTrip: TrackingTrip | null;
   currentLocation: Location | null;
-
-  // Trip management
   trips: TrackingTrip[];
   filteredTrips: TrackingTrip[];
-
-  // Map features
   pointsOfInterest: PointOfInterest[];
-
-  // Alerts
   alerts: TrackingAlert[];
   unreadAlertsCount: number;
-
-  // Filters & Settings
   filters: TrackingFilters;
   settings: TrackingSettings;
-
-  // State flags
   isLoading: boolean;
   error: string | null;
   isTrackingActive: boolean;
@@ -196,14 +180,11 @@ export interface TrackingState {
 }
 
 export interface TrackingActions {
-  // Location & Permission
   requestLocationPermission: () => Promise<boolean>;
   startTracking: (tripId?: string) => Promise<void>;
   stopTracking: () => void;
   updateCurrentLocation: (location: Location) => void;
   updateTripPosition: (position: TrackingLocation) => void;
-
-  // Trip management
   fetchCurrentTrip: () => Promise<void>;
   fetchTripById: (id: string) => Promise<void>;
   fetchTrips: () => Promise<void>;
@@ -212,35 +193,21 @@ export interface TrackingActions {
     tripId: string,
     status: TripStatus | TrackingStatus
   ) => Promise<void>;
-
-  // Alerts management
   addAlert: (alert: Omit<TrackingAlert, "id" | "timestamp">) => void;
   markAlertAsRead: (alertId: string) => void;
   clearAllAlerts: () => void;
   clearAlerts: () => void;
   getUnreadAlertsCount: () => number;
-
-  // Driver actions
   callDriver: (phoneNumber: string) => void;
-
-  // Map actions
   centerOnVehicle: () => void;
   changeMapViewMode: (mode: MapViewMode) => void;
-
-  // Points of Interest
   fetchPointsOfInterest: () => Promise<void>;
   addPointOfInterest: (poi: PointOfInterest) => Promise<void>;
-
-  // Filters
   setFilters: (filters: Partial<TrackingFilters>) => void;
   clearFilters: () => void;
   applyFilters: () => void;
   getFilteredTrips: () => TrackingTrip[];
-
-  // Settings
   updateSettings: (settings: Partial<TrackingSettings>) => Promise<void>;
-
-  // Utility
   calculateETA: () => Date | null;
   clearError: () => void;
 }
@@ -260,6 +227,6 @@ export const TRACKING_STATUS_COLORS: Record<
 };
 
 export const ROUTE_COLORS = {
-  prevu: "#3b82f6", // Bleu
-  encours: "#f59e0b", // Jaune
+  prevu: "#3b82f6",
+  encours: "#f59e0b",
 };

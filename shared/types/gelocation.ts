@@ -1,5 +1,3 @@
-// shared/types/geolocation.ts
-
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -33,7 +31,7 @@ export interface TripPoint {
 
 export interface Trip {
   id: string;
-  name: string; // Changed from 'title' to 'name' to match tracking
+  name: string;
   status: TripStatus;
   startTime: string;
   endTime?: string;
@@ -49,7 +47,6 @@ export interface Trip {
   notes?: string;
 }
 
-// Types de cartes compatibles avec react-native-maps
 export type MapType = "roadmap" | "satellite" | "hybrid" | "terrain";
 
 export interface MapSettings {
@@ -58,13 +55,13 @@ export interface MapSettings {
   showTraffic: boolean;
   showPOI: boolean;
   autoFollow: boolean;
-  updateInterval: number; // seconds
+  updateInterval: number;
 }
 
 export interface NotificationSettings {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
-  approachDistance: number; // meters
+  approachDistance: number;
   routeChangeAlerts: boolean;
   missionAlerts: boolean;
 }
@@ -89,7 +86,6 @@ export interface GeolocationAlert {
   coordinates?: Coordinates;
 }
 
-// Interface pour les régions de la carte (react-native-maps)
 export interface MapRegion {
   latitude: number;
   longitude: number;
@@ -97,7 +93,6 @@ export interface MapRegion {
   longitudeDelta: number;
 }
 
-// Interface pour les résultats de directions
 export interface DirectionsResult {
   distance: number;
   duration: number;
@@ -118,29 +113,18 @@ export interface GeolocationState {
 }
 
 export interface GeolocationActions {
-  // Location tracking
   requestLocationPermission: () => Promise<boolean>;
   startTracking: () => Promise<void>;
   stopTracking: () => void;
   updateCurrentLocation: (location: Location) => void;
-
-  // Trips management
   fetchTrips: () => Promise<void>;
   setCurrentTrip: (trip: Trip | null) => void;
   updateTripStatus: (tripId: string, status: TripStatus) => Promise<void>;
-
-  // Points of Interest
   fetchPointsOfInterest: () => Promise<void>;
   addPointOfInterest: (poi: PointOfInterest) => Promise<void>;
-
-  // Alerts
   addAlert: (alert: Omit<GeolocationAlert, "id" | "timestamp">) => void;
   markAlertAsRead: (alertId: string) => void;
   clearAlerts: () => void;
-
-  // Settings
   updateSettings: (settings: Partial<GeolocationSettings>) => Promise<void>;
-
-  // Utilities
   clearError: () => void;
 }

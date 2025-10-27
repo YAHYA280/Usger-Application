@@ -1,5 +1,3 @@
-// screens/innerApplication/tracking/components/TripCompletedCard.tsx
-
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -11,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import ConditionalComponent from "../../../../shared/components/conditionalComponent/conditionalComponent";
 
 interface TripCompletedCardProps {
   arrivalTime: string;
@@ -42,7 +41,7 @@ export const TripCompletedCard: React.FC<TripCompletedCardProps> = ({
       borderTopRightRadius: 24,
       paddingHorizontal: 20,
       paddingTop: 20,
-      paddingBottom: Platform.OS === "ios" ? 120 : 100, // More space to avoid nav bar (added 20px)
+      paddingBottom: Platform.OS === "ios" ? 120 : 100,
       ...Platform.select({
         ios: {
           shadowColor: "#000",
@@ -116,7 +115,6 @@ export const TripCompletedCard: React.FC<TripCompletedCardProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Header with icon and title */}
       <View style={styles.header}>
         <View style={styles.iconContainer}>
           <Ionicons name="checkmark-circle" size={32} color={colors.success} />
@@ -130,7 +128,6 @@ export const TripCompletedCard: React.FC<TripCompletedCardProps> = ({
         </View>
       </View>
 
-      {/* Call button */}
       <TouchableOpacity
         style={styles.callButton}
         onPress={handleCall}
@@ -139,8 +136,7 @@ export const TripCompletedCard: React.FC<TripCompletedCardProps> = ({
         <Text style={styles.callButtonText}>Rappeler le conducteur</Text>
       </TouchableOpacity>
 
-      {/* Close button (optional) */}
-      {onClose && (
+      <ConditionalComponent isValid={!!onClose}>
         <TouchableOpacity
           style={styles.closeButton}
           onPress={onClose}
@@ -148,7 +144,7 @@ export const TripCompletedCard: React.FC<TripCompletedCardProps> = ({
         >
           <Text style={styles.closeButtonText}>Fermer</Text>
         </TouchableOpacity>
-      )}
+      </ConditionalComponent>
     </View>
   );
 };

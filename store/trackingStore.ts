@@ -1,5 +1,3 @@
-// store/trackingStore.ts
-
 import { create } from "zustand";
 import {
   Location,
@@ -37,7 +35,6 @@ const defaultSettings: TrackingSettings = {
   },
 };
 
-// Mock POI for Tangier area
 const mockPOI: PointOfInterest[] = [
   {
     id: "poi1",
@@ -73,9 +70,7 @@ const mockPOI: PointOfInterest[] = [
   },
 ];
 
-// Mock trips data for Tangier
 const mockTrips: TrackingTrip[] = [
-  // Active trip (En cours) - for real-time tracking
   {
     id: "trip_001",
     nom: "Course vers Centre Ville",
@@ -258,7 +253,6 @@ const mockTrips: TrackingTrip[] = [
     createdAt: new Date(Date.now() - 20 * 60000),
     updatedAt: new Date(),
   },
-  // Completed trip (Terminé)
   {
     id: "trip_002",
     nom: "Transport vers Zone Industrielle",
@@ -352,7 +346,6 @@ const mockTrips: TrackingTrip[] = [
     createdAt: new Date(Date.now() - 4 * 60 * 60000),
     updatedAt: new Date(Date.now() - 3.3 * 60 * 60000),
   },
-  // Upcoming trip (A venir)
   {
     id: "trip_003",
     nom: "Navette vers Aéroport",
@@ -481,8 +474,7 @@ const applyFiltersToTrips = (
 };
 
 export const useTrackingStore = create<TrackingStore>((set, get) => ({
-  // State
-  currentTrip: mockTrips[0], // Active trip by default
+  currentTrip: mockTrips[0],
   currentLocation: null,
   trips: mockTrips,
   filteredTrips: mockTrips,
@@ -496,7 +488,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
   isTrackingActive: false,
   isLocationPermissionGranted: false,
 
-  // Location & Permission Actions
   requestLocationPermission: async () => {
     set({ isLoading: true });
     try {
@@ -550,7 +541,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
         isLoading: false,
       });
 
-      // Start location updates simulation
       const updateLocation = () => {
         const { isTrackingActive, currentLocation } = get();
         if (!isTrackingActive) return;
@@ -613,7 +603,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
     });
   },
 
-  // Trip Management Actions
   fetchCurrentTrip: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -712,7 +701,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
     }
   },
 
-  // Alerts Actions
   addAlert: (alert: Omit<TrackingAlert, "id" | "timestamp">) => {
     const newAlert: TrackingAlert = {
       ...alert,
@@ -755,14 +743,11 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
     return get().unreadAlertsCount;
   },
 
-  // Driver Actions
   callDriver: (phoneNumber: string) => {
     console.log("Calling driver:", phoneNumber);
   },
 
-  // Map Actions
   centerOnVehicle: () => {
-    // Toggle autoFollow to trigger the centering effect
     set((state) => ({
       settings: {
         ...state.settings,
@@ -772,7 +757,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
         },
       },
     }));
-    // Set it back to true after a short delay to enable continuous auto-follow
     setTimeout(() => {
       set((state) => ({
         settings: {
@@ -798,7 +782,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
     }));
   },
 
-  // Points of Interest Actions
   fetchPointsOfInterest: async () => {
     set({ isLoading: true });
     try {
@@ -865,7 +848,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
     return get().filteredTrips;
   },
 
-  // Settings Actions
   updateSettings: async (newSettings: Partial<TrackingSettings>) => {
     set({ isLoading: true });
     try {
@@ -892,7 +874,6 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
     }
   },
 
-  // Utility Actions
   calculateETA: () => {
     const currentTrip = get().currentTrip;
     if (!currentTrip) return null;
@@ -904,8 +885,7 @@ export const useTrackingStore = create<TrackingStore>((set, get) => ({
   },
 }));
 
-// Simulation: Animate driver moving towards pickup location
-let simulationInterval: NodeJS.Timeout | null = null;
+let simulationInterval: ReturnType<typeof setInterval> | null = null;
 
 export const startDriverSimulation = () => {
   if (simulationInterval) {
@@ -917,20 +897,15 @@ export const startDriverSimulation = () => {
 
     if (!currentTrip || !currentTrip.positionActuelle) return;
 
-    // Get target (pickup location)
     const target = currentTrip.pointDepart;
     const current = currentTrip.positionActuelle;
 
-    // Calculate direction towards target
     const latDiff = target.latitude - current.latitude;
     const lngDiff = target.longitude - current.longitude;
 
-    // Calculate distance
     const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
 
-    // If very close to target (within ~50 meters), stop or slow down
     if (distance < 0.0005) {
-      // Driver has arrived at pickup, stop simulation
       if (simulationInterval) {
         clearInterval(simulationInterval);
         simulationInterval = null;
@@ -938,14 +913,12 @@ export const startDriverSimulation = () => {
       return;
     }
 
-    // Move a small step towards target (simulate ~100-200 meters per update)
-    const stepSize = 0.0008; // Approximately 100 meters
+    const stepSize = 0.0008;
     const progress = Math.min(stepSize / distance, 1);
 
     const newLat = current.latitude + (latDiff * progress);
     const newLng = current.longitude + (lngDiff * progress);
 
-    // Update position
     useTrackingStore.setState((state) => {
       if (!state.currentTrip) return state;
 
@@ -958,12 +931,11 @@ export const startDriverSimulation = () => {
             longitude: newLng,
             timestamp: new Date(),
           },
-          // Update distance remaining
           distanceRestante: Math.max(0, (state.currentTrip.distanceRestante || 0) - 0.1),
         },
       };
     });
-  }, 2000); // Update every 2 seconds
+  }, 2000);
 };
 
 export const stopDriverSimulation = () => {

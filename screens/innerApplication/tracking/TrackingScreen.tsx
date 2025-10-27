@@ -11,19 +11,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
+import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { GoogleMapsView } from "../../../shared/components/maps/GoogleMapsView";
 import { Header } from "../../../shared/components/ui/Header";
 import { Sidebar } from "../../../shared/components/ui/Sidebar";
 import { useTrackingStore } from "../../../store/trackingStore";
 
-// Import types from tracking
 import type {
   Location,
   PointOfInterest,
   Trip,
 } from "../../../shared/types/tracking";
 
-// Import new card components
 import {
   DriverArrivalCard,
   MinimizedDriverCard,
@@ -35,11 +34,9 @@ export const TrackingScreen: React.FC = () => {
   const [isCardMinimized, setIsCardMinimized] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-  // Animation values for smooth card transitions
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  // Map ref for direct control
   const mapRef = useRef<any>(null);
 
   const {
@@ -85,7 +82,6 @@ export const TrackingScreen: React.FC = () => {
   ];
 
   const handleMinimizeCard = () => {
-    // Fade out and scale down animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -98,9 +94,7 @@ export const TrackingScreen: React.FC = () => {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // After animation, switch to minimized card
       setIsCardMinimized(true);
-      // Fade in the minimized card
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -118,7 +112,6 @@ export const TrackingScreen: React.FC = () => {
   };
 
   const handleExpandCard = () => {
-    // Fade out and scale down animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -131,9 +124,7 @@ export const TrackingScreen: React.FC = () => {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // After animation, switch to expanded card
       setIsCardMinimized(false);
-      // Fade in the expanded card
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -151,7 +142,6 @@ export const TrackingScreen: React.FC = () => {
   };
 
   const handleCenterOnVehicle = () => {
-    // Directly animate to the driver's current position
     if (mapRef.current && currentTrip?.positionActuelle) {
       const region = {
         latitude: currentTrip.positionActuelle.latitude,
@@ -190,17 +180,12 @@ export const TrackingScreen: React.FC = () => {
     return `${distance.toFixed(1)} km`;
   };
 
-  // Determine if trip is completed
   const isTripCompleted =
     currentTrip?.statut === "Terminé" || currentTrip?.statut === "Termine";
 
-  // Determine if user has been picked up (driver is en route to destination)
-  // For now, we'll assume if status is "En route" and there's a current position, driver is on the way
-  // You can enhance this logic based on your backend data
   const isUserPickedUp =
     currentTrip?.statut === "En route" && currentTrip?.positionActuelle;
 
-  // Convert tracking data to GoogleMapsView format
   const currentLocation: Location | null = currentTrip?.positionActuelle
     ? {
         latitude: currentTrip.positionActuelle.latitude,
@@ -210,12 +195,9 @@ export const TrackingScreen: React.FC = () => {
       }
     : null;
 
-  // Build trip points based on trip phase
   const buildTripPoints = () => {
     if (!currentTrip) return [];
 
-    // If user hasn't been picked up yet: show only pickup location
-    // (driver position is shown separately as currentLocation marker)
     if (!isUserPickedUp) {
       return [
         {
@@ -230,8 +212,6 @@ export const TrackingScreen: React.FC = () => {
       ];
     }
 
-    // If user is picked up: show only destination
-    // (current position is shown as currentLocation marker)
     return [
       {
         id: "destination",
@@ -276,7 +256,6 @@ export const TrackingScreen: React.FC = () => {
 
   const pointsOfInterest: PointOfInterest[] = [];
 
-  // Convert mapType to the format expected by GoogleMapsView
   const getGoogleMapsViewType = ():
     | "roadmap"
     | "satellite"
@@ -396,7 +375,6 @@ export const TrackingScreen: React.FC = () => {
           onMapReady={handleMapReady}
         />
 
-        {/* Floating Controls */}
         <View style={styles.floatingControls}>
           <TouchableOpacity
             style={styles.controlButton}
@@ -415,9 +393,51 @@ export const TrackingScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Bottom Cards - Conditional rendering based on trip status */}
-        {isTripCompleted ? (
-          // Show Trip Completed Card
+        <ConditionalComponent
+          isValid={isTripCompleted}
+          defaultComponent={
+            <Animated.View
+              style={{
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              }}
+            >
+              <ConditionalComponent
+                isValid={isCardMinimized}
+                defaultComponent={
+                  <DriverArrivalCard
+                    driverName={`${currentTrip.chauffeur.prenom} ${currentTrip.chauffeur.nom}`}
+                    driverPhoto={currentTrip.chauffeur.photo}
+                    status={currentTrip.statut as string}
+                    estimatedTime={`${Math.round(
+                      (currentTrip.heureArriveeEstimee.getTime() - Date.now()) /
+                        60000
+                    )} min`}
+                    vehicleBrand={currentTrip.vehicule.marque}
+                    vehicleModel={currentTrip.vehicule.modele}
+                    licensePlate={currentTrip.vehicule.plaque}
+                    phoneNumber={currentTrip.chauffeur.telephone}
+                    onMinimize={handleMinimizeCard}
+                  />
+                }
+              >
+                <MinimizedDriverCard
+                  driverName={`${currentTrip.chauffeur.prenom} ${currentTrip.chauffeur.nom}`}
+                  driverPhoto={currentTrip.chauffeur.photo}
+                  status={currentTrip.statut as string}
+                  estimatedTime={`${Math.round(
+                    (currentTrip.heureArriveeEstimee.getTime() - Date.now()) /
+                      60000
+                  )} min`}
+                  vehicleBrand={currentTrip.vehicule.marque}
+                  vehicleModel={currentTrip.vehicule.modele}
+                  licensePlate={currentTrip.vehicule.plaque}
+                  onExpand={handleExpandCard}
+                />
+              </ConditionalComponent>
+            </Animated.View>
+          }
+        >
           <TripCompletedCard
             arrivalTime={formatTime(
               currentTrip.heureArriveeReelle || currentTrip.heureArriveeEstimee
@@ -425,49 +445,9 @@ export const TrackingScreen: React.FC = () => {
             phoneNumber={currentTrip.chauffeur.telephone}
             onClose={() => router.back()}
           />
-        ) : (
-          // Show Driver Cards with smooth animations
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            }}
-          >
-            {isCardMinimized ? (
-              <MinimizedDriverCard
-                driverName={`${currentTrip.chauffeur.prenom} ${currentTrip.chauffeur.nom}`}
-                driverPhoto={currentTrip.chauffeur.photo}
-                status={currentTrip.statut as string}
-                estimatedTime={`${Math.round(
-                  (currentTrip.heureArriveeEstimee.getTime() - Date.now()) /
-                    60000
-                )} min`}
-                vehicleBrand={currentTrip.vehicule.marque}
-                vehicleModel={currentTrip.vehicule.modele}
-                licensePlate={currentTrip.vehicule.plaque}
-                onExpand={handleExpandCard}
-              />
-            ) : (
-              <DriverArrivalCard
-                driverName={`${currentTrip.chauffeur.prenom} ${currentTrip.chauffeur.nom}`}
-                driverPhoto={currentTrip.chauffeur.photo}
-                status={currentTrip.statut as string}
-                estimatedTime={`${Math.round(
-                  (currentTrip.heureArriveeEstimee.getTime() - Date.now()) /
-                    60000
-                )} min`}
-                vehicleBrand={currentTrip.vehicule.marque}
-                vehicleModel={currentTrip.vehicule.modele}
-                licensePlate={currentTrip.vehicule.plaque}
-                phoneNumber={currentTrip.chauffeur.telephone}
-                onMinimize={handleMinimizeCard}
-              />
-            )}
-          </Animated.View>
-        )}
+        </ConditionalComponent>
       </View>
 
-      {/* Sidebar */}
       <Sidebar
         visible={isSidebarVisible}
         onClose={handleCloseSidebar}

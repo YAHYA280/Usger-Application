@@ -1,5 +1,3 @@
-// screens/innerApplication/tracking/components/DriverArrivalCard.tsx
-
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -12,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import ConditionalComponent from "../../../../shared/components/conditionalComponent/conditionalComponent";
 
 interface DriverArrivalCardProps {
   driverName: string;
@@ -47,11 +46,11 @@ export const DriverArrivalCard: React.FC<DriverArrivalCardProps> = ({
   const getStatusColor = () => {
     switch (status.toLowerCase()) {
       case "en route":
-        return "#22c55e"; // Green
+        return "#22c55e";
       case "en attente":
-        return "#f59e0b"; // Amber
+        return "#f59e0b";
       case "arrivé":
-        return "#06b6d4"; // Cyan
+        return "#06b6d4";
       default:
         return colors.primary;
     }
@@ -68,7 +67,7 @@ export const DriverArrivalCard: React.FC<DriverArrivalCardProps> = ({
       borderTopRightRadius: 24,
       paddingHorizontal: 20,
       paddingTop: 16,
-      paddingBottom: Platform.OS === "ios" ? 120 : 100, // More space to avoid nav bar (added 20px)
+      paddingBottom: Platform.OS === "ios" ? 120 : 100,
       ...Platform.select({
         ios: {
           shadowColor: "#000",
@@ -215,20 +214,21 @@ export const DriverArrivalCard: React.FC<DriverArrivalCardProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Handle for minimize gesture */}
       <TouchableOpacity onPress={onMinimize} activeOpacity={0.7}>
         <View style={styles.handle} />
       </TouchableOpacity>
 
-      {/* Driver Section */}
       <View style={styles.driverSection}>
-        {driverPhoto ? (
+        <ConditionalComponent
+          isValid={!!driverPhoto}
+          defaultComponent={
+            <View style={styles.driverPhotoPlaceholder}>
+              <Ionicons name="person" size={40} color={colors.primary} />
+            </View>
+          }
+        >
           <Image source={{ uri: driverPhoto }} style={styles.driverPhoto} />
-        ) : (
-          <View style={styles.driverPhotoPlaceholder}>
-            <Ionicons name="person" size={40} color={colors.primary} />
-          </View>
-        )}
+        </ConditionalComponent>
 
         <View style={styles.driverInfo}>
           <Text style={styles.driverName}>{driverName}</Text>
@@ -257,7 +257,6 @@ export const DriverArrivalCard: React.FC<DriverArrivalCardProps> = ({
         </View>
       </View>
 
-      {/* Vehicle Section */}
       <View style={styles.vehicleSection}>
         <View style={styles.vehicleIcon}>
           <Ionicons name="car-sport" size={24} color={colors.primary} />
@@ -273,7 +272,6 @@ export const DriverArrivalCard: React.FC<DriverArrivalCardProps> = ({
         </View>
       </View>
 
-      {/* Call Button */}
       <TouchableOpacity
         style={styles.callButton}
         onPress={handleCall}

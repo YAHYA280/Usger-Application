@@ -24,7 +24,7 @@ interface GoogleMapsViewProps {
   centerOnLocation?: boolean;
   onLocationUpdate?: (location: Location) => void;
   onTripPointClick?: (tripId: string, pointId: string) => void;
-  onMapReady?: (mapRef: React.RefObject<MapView>) => void;
+  onMapReady?: (mapRef: React.RefObject<MapView | null>) => void;
   style?: any;
 }
 
@@ -216,21 +216,17 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
   );
 
   const renderDirections = () => {
-    // Need currentLocation (driver) and at least one trip point to draw route
     if (!currentLocation || !currentTrip || !currentTrip.points || currentTrip.points.length < 1) {
       return null;
     }
 
-    // Origin is always the driver's current location
     const origin = {
       latitude: currentLocation.latitude,
       longitude: currentLocation.longitude,
     };
 
-    // Destination is the target (pickup or final destination)
     const destination = currentTrip.points[currentTrip.points.length - 1].coordinates;
 
-    // Waypoints are any intermediate points (if any)
     const waypoints = currentTrip.points
       .slice(0, -1)
       .map((point) => point.coordinates);
@@ -283,7 +279,6 @@ const GoogleMapsView: React.FC<GoogleMapsViewProps> = ({
 
   const handleMapReady = () => {
     setIsMapReady(true);
-    // Pass the map ref to parent component
     if (onMapReadyCallback) {
       onMapReadyCallback(mapRef);
     }
