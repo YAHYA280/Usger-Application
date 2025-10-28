@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function TrackingLayout() {
+export default function HistoryLayout() {
   return (
     <Stack
       screenOptions={{
@@ -8,7 +8,7 @@ export default function TrackingLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="history" options={{ headerShown: false }} />
+      <Stack.Screen name="[id]" options={{ headerShown: false }} />
     </Stack>
   );
 }

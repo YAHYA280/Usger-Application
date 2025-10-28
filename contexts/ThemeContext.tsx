@@ -2,8 +2,10 @@ import { StatusBar } from "expo-status-bar";
 import React, { createContext, ReactNode, useContext } from "react";
 import { useThemeColors } from "../hooks/useTheme";
 
+export type ThemeColors = ReturnType<typeof useThemeColors>;
+
 interface ThemeContextType {
-  colors: ReturnType<typeof useThemeColors>;
+  colors: ThemeColors;
   isDark: boolean;
 }
 

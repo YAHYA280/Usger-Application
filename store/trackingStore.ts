@@ -432,6 +432,359 @@ const mockTrips: TrackingTrip[] = [
     createdAt: new Date(),
     updatedAt: new Date(),
   },
+  // Add these trips to the mockTrips array after trip_003
+
+  {
+    id: "trip_004",
+    nom: "Transport Matinal École",
+    pointDepart: {
+      latitude: 35.76890123456789,
+      longitude: -5.823456789012345,
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60000),
+      address: "Quartier Administratif, Tanger",
+    },
+    pointArrivee: {
+      latitude: 35.78234567890123,
+      longitude: -5.809876543210987,
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60000 + 30 * 60000),
+      address: "École Internationale de Tanger",
+    },
+    statut: "Termine",
+    heureDepart: new Date(Date.now() - 5 * 24 * 60 * 60000),
+    heureArriveeEstimee: new Date(
+      Date.now() - 5 * 24 * 60 * 60000 + 25 * 60000
+    ),
+    heureArriveeReelle: new Date(Date.now() - 5 * 24 * 60 * 60000 + 30 * 60000),
+    distanceParcourue: 8.2,
+    distanceRestante: 0,
+    distance: 8.2,
+    chauffeur: {
+      id: "driver_002",
+      nom: "Benjelloun",
+      prenom: "Karim",
+      photo: "https://i.pravatar.cc/150?img=33",
+      telephone: "+212 6 23 45 67 89",
+      statut: "Disponible",
+    },
+    vehicule: {
+      id: "vehicle_002",
+      modele: "Transit",
+      marque: "Ford",
+      plaque: "48523-B-18",
+      couleur: "Bleu",
+    },
+    points: [
+      {
+        id: "p7",
+        type: "pickup",
+        coordinates: {
+          latitude: 35.76890123456789,
+          longitude: -5.823456789012345,
+        },
+        address: "Quartier Administratif, Tanger",
+        estimatedTime: "07:30",
+        actualTime: "07:30",
+      },
+      {
+        id: "p7-user1",
+        type: "waypoint",
+        coordinates: {
+          latitude: 35.77234567890123,
+          longitude: -5.818765432109876,
+        },
+        address: "Résidence Al Andalous, Tanger",
+        estimatedTime: "07:35",
+        actualTime: "07:36",
+        notes: "Élève: Sara Alami",
+      },
+      {
+        id: "p7-user2",
+        type: "waypoint",
+        coordinates: {
+          latitude: 35.77656789012345,
+          longitude: -5.814321098765432,
+        },
+        address: "Quartier Malabata, Tanger",
+        estimatedTime: "07:40",
+        actualTime: "07:42",
+        notes: "Élève: Mehdi Tazi",
+      },
+      {
+        id: "p7-user3",
+        type: "waypoint",
+        coordinates: {
+          latitude: 35.77989012345678,
+          longitude: -5.811234567890123,
+        },
+        address: "Avenue des FAR, Tanger",
+        estimatedTime: "07:45",
+        actualTime: "07:48",
+        notes: "Élève: Leila Bennani",
+      },
+      {
+        id: "p8",
+        type: "destination",
+        coordinates: {
+          latitude: 35.78234567890123,
+          longitude: -5.809876543210987,
+        },
+        address: "École Internationale de Tanger",
+        estimatedTime: "07:55",
+        actualTime: "08:00",
+      },
+    ],
+    alertes: [],
+    customerInfo: {
+      name: "Transport Scolaire",
+      phone: "+212 5 39 11 22 33",
+    },
+    notes:
+      "Transport matinal effectué sans incident. Tous les élèves sont arrivés à l'heure.",
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60000),
+    updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60000 + 30 * 60000),
+  },
+  {
+    id: "trip_005",
+    nom: "Trajet Annulé - Conditions Météo",
+    pointDepart: {
+      latitude: 35.75123456789012,
+      longitude: -5.834567890123456,
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60000),
+      address: "Port de Tanger",
+    },
+    pointArrivee: {
+      latitude: 35.79876543210987,
+      longitude: -5.789012345678901,
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60000),
+      address: "Cap Spartel, Tanger",
+    },
+    statut: "Annule",
+    heureDepart: new Date(Date.now() - 3 * 24 * 60 * 60000),
+    heureArriveeEstimee: new Date(
+      Date.now() - 3 * 24 * 60 * 60000 + 45 * 60000
+    ),
+    distance: 18.5,
+    chauffeur: {
+      id: "driver_001",
+      nom: "Alaoui",
+      prenom: "Hassan",
+      photo: "https://i.pravatar.cc/150?img=12",
+      telephone: "+212 6 12 34 56 78",
+      statut: "Disponible",
+    },
+    vehicule: {
+      id: "vehicle_001",
+      modele: "Sprinter",
+      marque: "Mercedes",
+      plaque: "95700-L-15",
+      couleur: "Blanc",
+    },
+    points: [
+      {
+        id: "p9",
+        type: "pickup",
+        coordinates: {
+          latitude: 35.75123456789012,
+          longitude: -5.834567890123456,
+        },
+        address: "Port de Tanger",
+        estimatedTime: "14:00",
+      },
+      {
+        id: "p10",
+        type: "destination",
+        coordinates: {
+          latitude: 35.79876543210987,
+          longitude: -5.789012345678901,
+        },
+        address: "Cap Spartel, Tanger",
+        estimatedTime: "14:45",
+      },
+    ],
+    alertes: [],
+    customerInfo: {
+      name: "Excursion Touristique",
+      phone: "+212 5 39 44 55 66",
+    },
+    notes:
+      "Trajet annulé en raison de conditions météorologiques défavorables. Fortes pluies et vents violents.",
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60000),
+    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60000),
+  },
+  {
+    id: "trip_006",
+    nom: "Navette Entreprise - Retour",
+    pointDepart: {
+      latitude: 35.77234567890123,
+      longitude: -5.858765432109876,
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60000 - 8 * 60 * 60000),
+      address: "Zone Franche de Tanger",
+    },
+    pointArrivee: {
+      latitude: 35.75890123456789,
+      longitude: -5.827654321098765,
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60000 - 7.5 * 60 * 60000),
+      address: "Centre Ville, Tanger",
+    },
+    statut: "Termine",
+    heureDepart: new Date(Date.now() - 1 * 24 * 60 * 60000 - 8 * 60 * 60000),
+    heureArriveeEstimee: new Date(
+      Date.now() - 1 * 24 * 60 * 60000 - 7.5 * 60 * 60000
+    ),
+    heureArriveeReelle: new Date(
+      Date.now() - 1 * 24 * 60 * 60000 - 7.5 * 60 * 60000
+    ),
+    distanceParcourue: 14.7,
+    distanceRestante: 0,
+    distance: 14.7,
+    chauffeur: {
+      id: "driver_003",
+      nom: "Kadiri",
+      prenom: "Youssef",
+      photo: "https://i.pravatar.cc/150?img=68",
+      telephone: "+212 6 34 56 78 90",
+      statut: "Disponible",
+    },
+    vehicule: {
+      id: "vehicle_003",
+      modele: "Coaster",
+      marque: "Toyota",
+      plaque: "62341-A-16",
+      couleur: "Gris",
+    },
+    points: [
+      {
+        id: "p11",
+        type: "pickup",
+        coordinates: {
+          latitude: 35.77234567890123,
+          longitude: -5.858765432109876,
+        },
+        address: "Zone Franche de Tanger",
+        estimatedTime: "17:00",
+        actualTime: "17:00",
+      },
+      {
+        id: "p11-user1",
+        type: "waypoint",
+        coordinates: {
+          latitude: 35.76543210987654,
+          longitude: -5.845678901234567,
+        },
+        address: "Quartier Boubana, Tanger",
+        estimatedTime: "17:10",
+        actualTime: "17:12",
+        notes: "Employés: Groupe A (8 personnes)",
+      },
+      {
+        id: "p11-user2",
+        type: "waypoint",
+        coordinates: {
+          latitude: 35.76123456789012,
+          longitude: -5.837654321098765,
+        },
+        address: "Avenue Mohammed VI, Tanger",
+        estimatedTime: "17:20",
+        actualTime: "17:20",
+        notes: "Employés: Groupe B (6 personnes)",
+      },
+      {
+        id: "p12",
+        type: "destination",
+        coordinates: {
+          latitude: 35.75890123456789,
+          longitude: -5.827654321098765,
+        },
+        address: "Centre Ville, Tanger",
+        estimatedTime: "17:30",
+        actualTime: "17:30",
+      },
+    ],
+    alertes: [],
+    customerInfo: {
+      name: "Transport Entreprise XYZ",
+      phone: "+212 5 39 77 88 99",
+    },
+    notes:
+      "Navette de retour du personnel. 14 employés transportés. Trajet effectué dans les délais.",
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60000 - 8 * 60 * 60000),
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60000 - 7.5 * 60 * 60000),
+  },
+  {
+    id: "trip_007",
+    nom: "Course Urgente Hôpital",
+    pointDepart: {
+      latitude: 35.76456789012345,
+      longitude: -5.812345678901234,
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60000 - 6 * 60 * 60000),
+      address: "Quartier Charf, Tanger",
+    },
+    pointArrivee: {
+      latitude: 35.78123456789012,
+      longitude: -5.831234567890123,
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60000 - 5.75 * 60 * 60000),
+      address: "Hôpital Mohamed V, Tanger",
+    },
+    statut: "Termine",
+    heureDepart: new Date(Date.now() - 2 * 24 * 60 * 60000 - 6 * 60 * 60000),
+    heureArriveeEstimee: new Date(
+      Date.now() - 2 * 24 * 60 * 60000 - 5.8 * 60 * 60000
+    ),
+    heureArriveeReelle: new Date(
+      Date.now() - 2 * 24 * 60 * 60000 - 5.75 * 60 * 60000
+    ),
+    distanceParcourue: 6.8,
+    distanceRestante: 0,
+    distance: 6.8,
+    chauffeur: {
+      id: "driver_002",
+      nom: "Benjelloun",
+      prenom: "Karim",
+      photo: "https://i.pravatar.cc/150?img=33",
+      telephone: "+212 6 23 45 67 89",
+      statut: "Disponible",
+    },
+    vehicule: {
+      id: "vehicle_002",
+      modele: "Transit",
+      marque: "Ford",
+      plaque: "48523-B-18",
+      couleur: "Bleu",
+    },
+    points: [
+      {
+        id: "p13",
+        type: "pickup",
+        coordinates: {
+          latitude: 35.76456789012345,
+          longitude: -5.812345678901234,
+        },
+        address: "Quartier Charf, Tanger",
+        estimatedTime: "10:00",
+        actualTime: "10:00",
+      },
+      {
+        id: "p14",
+        type: "destination",
+        coordinates: {
+          latitude: 35.78123456789012,
+          longitude: -5.831234567890123,
+        },
+        address: "Hôpital Mohamed V, Tanger",
+        estimatedTime: "10:12",
+        actualTime: "10:15",
+      },
+    ],
+    alertes: [],
+    customerInfo: {
+      name: "Transport Médical Urgent",
+      phone: "+212 5 39 99 00 11",
+    },
+    notes:
+      "Course urgente effectuée avec succès. Patient arrivé à temps aux urgences.",
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60000 - 6 * 60 * 60000),
+    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60000 - 5.75 * 60 * 60000),
+  },
 ];
 
 const applyFiltersToTrips = (
@@ -916,8 +1269,8 @@ export const startDriverSimulation = () => {
     const stepSize = 0.0008;
     const progress = Math.min(stepSize / distance, 1);
 
-    const newLat = current.latitude + (latDiff * progress);
-    const newLng = current.longitude + (lngDiff * progress);
+    const newLat = current.latitude + latDiff * progress;
+    const newLng = current.longitude + lngDiff * progress;
 
     useTrackingStore.setState((state) => {
       if (!state.currentTrip) return state;
@@ -931,7 +1284,10 @@ export const startDriverSimulation = () => {
             longitude: newLng,
             timestamp: new Date(),
           },
-          distanceRestante: Math.max(0, (state.currentTrip.distanceRestante || 0) - 0.1),
+          distanceRestante: Math.max(
+            0,
+            (state.currentTrip.distanceRestante || 0) - 0.1
+          ),
         },
       };
     });

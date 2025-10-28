@@ -76,7 +76,7 @@ export const TrackingScreen: React.FC = () => {
       icon: "history" as const,
       onPress: () => {
         handleCloseSidebar();
-        router.push("/(tabs)/planification"); // or wherever your tracking history is
+        router.push("/tracking/history" as any);
       },
     },
   ];
