@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
@@ -25,9 +25,36 @@ export const TripHistoryScreen: React.FC = () => {
 
   const { trips, fetchTrips, isLoading } = useTrackingStore();
 
+  // Animation refs
+  const cardAnimations = useRef<Map<string, Animated.Value>>(new Map());
+
   useEffect(() => {
     fetchTrips();
   }, []);
+
+  const getCardAnimation = (id: string) => {
+    if (!cardAnimations.current.has(id)) {
+      cardAnimations.current.set(id, new Animated.Value(0));
+    }
+    return cardAnimations.current.get(id)!;
+  };
+
+  useEffect(() => {
+    const filteredTrips = getFilteredTrips();
+
+    // Trigger staggered animations for visible cards
+    const animations = filteredTrips.map((trip, index) => {
+      const anim = getCardAnimation(trip.id);
+      return Animated.timing(anim, {
+        toValue: 1,
+        duration: 500,
+        delay: index * 100,
+        useNativeDriver: true,
+      });
+    });
+
+    Animated.parallel(animations).start();
+  }, [trips, searchQuery, selectedStatus]);
 
   const handleOpenSidebar = () => {
     setIsSidebarVisible(true);
@@ -167,27 +194,43 @@ export const TripHistoryScreen: React.FC = () => {
     }
   };
 
-  const renderTripCard = ({ item }: { item: TrackingTrip }) => (
-    <TouchableOpacity
-      style={[
-        styles.tripCard,
-        { borderLeftColor: getStatusColor(item.statut) },
-      ]}
-      onPress={() => router.push(`/tracking/history/${item.id}` as any)}
-      activeOpacity={0.7}
-    >
-      <View
-        style={[
-          styles.tripCardIconContainer,
-          { backgroundColor: getIconBackgroundColor(item.statut) },
-        ]}
+  const renderTripCard = ({ item }: { item: TrackingTrip }) => {
+    const cardAnim = getCardAnimation(item.id);
+
+    return (
+      <Animated.View
+        style={{
+          opacity: cardAnim,
+          transform: [
+            {
+              translateY: cardAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [30, 0],
+              }),
+            },
+          ],
+        }}
       >
-        <Ionicons
-          name={getStatusIcon(item.statut) as any}
-          size={28}
-          color={getStatusColor(item.statut)}
-        />
-      </View>
+        <TouchableOpacity
+          style={[
+            styles.tripCard,
+            { borderLeftColor: getStatusColor(item.statut) },
+          ]}
+          onPress={() => router.push(`/tracking/history/${item.id}` as any)}
+          activeOpacity={0.7}
+        >
+          <View
+            style={[
+              styles.tripCardIconContainer,
+              { backgroundColor: getIconBackgroundColor(item.statut) },
+            ]}
+          >
+            <Ionicons
+              name={getStatusIcon(item.statut) as any}
+              size={28}
+              color={getStatusColor(item.statut)}
+            />
+          </View>
 
       <View style={styles.tripCardContent}>
         <View style={styles.tripCardHeader}>
@@ -267,8 +310,10 @@ export const TripHistoryScreen: React.FC = () => {
           </View>
         </View>
       </View>
-    </TouchableOpacity>
-  );
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   const renderFilterButton = (
     label: string,

@@ -26,23 +26,23 @@ export const createDetailStyles = (colors: ThemeColors) =>
     statusSection: {
       backgroundColor: colors.surface,
       padding: 20,
-      marginBottom: 16,
+      marginBottom: 20,
       borderWidth: colors.isDark ? 1 : 0,
       borderColor: colors.isDark ? "rgba(255, 255, 255, 0.1)" : "transparent",
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: colors.isDark ? 0.4 : 0.12,
-          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: colors.isDark ? 0.5 : 0.15,
+          shadowRadius: 10,
         },
         android: {
-          elevation: 5,
+          elevation: 8,
         },
         web: {
           boxShadow: colors.isDark
-            ? "0 4px 12px rgba(0, 0, 0, 0.5)"
-            : "0 4px 12px rgba(0, 0, 0, 0.12)",
+            ? "0 6px 16px rgba(0, 0, 0, 0.6)"
+            : "0 6px 16px rgba(0, 0, 0, 0.15)",
         },
       }),
     },
@@ -66,25 +66,29 @@ export const createDetailStyles = (colors: ThemeColors) =>
     card: {
       backgroundColor: colors.card,
       marginHorizontal: 16,
-      marginBottom: 16,
+      marginBottom: 20,
       borderRadius: 12,
-      overflow: "hidden",
-      borderWidth: colors.isDark ? 1 : 0,
-      borderColor: colors.isDark ? "rgba(255, 255, 255, 0.1)" : "transparent",
+      borderLeftWidth: 4,
+      borderTopWidth: colors.isDark ? 1 : 0,
+      borderRightWidth: colors.isDark ? 1 : 0,
+      borderBottomWidth: colors.isDark ? 1 : 0,
+      borderTopColor: colors.isDark ? "rgba(255, 255, 255, 0.1)" : "transparent",
+      borderRightColor: colors.isDark ? "rgba(255, 255, 255, 0.1)" : "transparent",
+      borderBottomColor: colors.isDark ? "rgba(255, 255, 255, 0.1)" : "transparent",
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: colors.isDark ? 0.4 : 0.12,
-          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: colors.isDark ? 0.5 : 0.15,
+          shadowRadius: 10,
         },
         android: {
-          elevation: 5,
+          elevation: 8,
         },
         web: {
           boxShadow: colors.isDark
-            ? "0 4px 12px rgba(0, 0, 0, 0.5)"
-            : "0 4px 12px rgba(0, 0, 0, 0.12)",
+            ? "0 6px 16px rgba(0, 0, 0, 0.6)"
+            : "0 6px 16px rgba(0, 0, 0, 0.15)",
         },
       }),
     },
@@ -102,6 +106,9 @@ export const createDetailStyles = (colors: ThemeColors) =>
       padding: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+      overflow: "hidden",
     },
     cardTitle: {
       fontSize: 16,
@@ -109,6 +116,9 @@ export const createDetailStyles = (colors: ThemeColors) =>
     },
     cardContent: {
       padding: 16,
+      borderBottomLeftRadius: 12,
+      borderBottomRightRadius: 12,
+      overflow: "hidden",
     },
     infoRow: {
       flexDirection: "row",
@@ -278,25 +288,24 @@ export const createDetailStyles = (colors: ThemeColors) =>
     skeletonCard: {
       backgroundColor: colors.card,
       marginHorizontal: 16,
-      marginBottom: 16,
+      marginBottom: 20,
       borderRadius: 12,
-      overflow: "hidden",
       borderWidth: colors.isDark ? 1 : 0,
       borderColor: colors.isDark ? "rgba(255, 255, 255, 0.1)" : "transparent",
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: colors.isDark ? 0.4 : 0.12,
-          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: colors.isDark ? 0.5 : 0.15,
+          shadowRadius: 10,
         },
         android: {
-          elevation: 5,
+          elevation: 8,
         },
         web: {
           boxShadow: colors.isDark
-            ? "0 4px 12px rgba(0, 0, 0, 0.5)"
-            : "0 4px 12px rgba(0, 0, 0, 0.12)",
+            ? "0 6px 16px rgba(0, 0, 0, 0.6)"
+            : "0 6px 16px rgba(0, 0, 0, 0.15)",
         },
       }),
     },
@@ -307,6 +316,9 @@ export const createDetailStyles = (colors: ThemeColors) =>
       padding: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+      overflow: "hidden",
     },
     skeletonIcon: {
       width: 40,
@@ -327,6 +339,9 @@ export const createDetailStyles = (colors: ThemeColors) =>
     skeletonContent: {
       padding: 16,
       gap: 12,
+      borderBottomLeftRadius: 12,
+      borderBottomRightRadius: 12,
+      overflow: "hidden",
     },
     skeletonLine: {
       height: 16,

@@ -65,7 +65,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleHistoriqueTrajetsPress = () => {
-    router.push("./historique-trajets");
+    router.push("./tracking/history");
   };
 
   const handleAbsencePress = () => {

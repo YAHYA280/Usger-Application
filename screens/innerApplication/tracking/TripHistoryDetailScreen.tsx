@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
+  Animated,
   Image,
   Linking,
   ScrollView,
@@ -25,11 +26,43 @@ export const TripHistoryDetailScreen: React.FC = () => {
   const { trips, fetchTripById, isLoading } = useTrackingStore();
   const trip = trips.find((t) => t.id === id);
 
+  // Animation refs for each card
+  const statusAnim = useRef(new Animated.Value(0)).current;
+  const card1Anim = useRef(new Animated.Value(0)).current;
+  const card2Anim = useRef(new Animated.Value(0)).current;
+  const card3Anim = useRef(new Animated.Value(0)).current;
+  const card4Anim = useRef(new Animated.Value(0)).current;
+  const card5Anim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     if (id && !trip) {
       fetchTripById(id);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (trip) {
+      // Staggered animation for cards
+      const animations = [
+        { anim: statusAnim, delay: 0 },
+        { anim: card1Anim, delay: 100 },
+        { anim: card2Anim, delay: 200 },
+        { anim: card3Anim, delay: 300 },
+        { anim: card4Anim, delay: 400 },
+        { anim: card5Anim, delay: 500 },
+      ];
+
+      animations.forEach(({ anim, delay }) => {
+        setTimeout(() => {
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }).start();
+        }, delay);
+      });
+    }
+  }, [trip]);
 
   const getStatusColor = (status: TripStatus | string) => {
     switch (status) {
@@ -185,7 +218,22 @@ export const TripHistoryDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Status Section */}
-        <View style={styles.statusSection}>
+        <Animated.View
+          style={[
+            styles.statusSection,
+            {
+              opacity: statusAnim,
+              transform: [
+                {
+                  translateY: statusAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <View style={styles.statusHeader}>
             <Ionicons
               name={getStatusIcon(trip.statut) as any}
@@ -203,10 +251,26 @@ export const TripHistoryDetailScreen: React.FC = () => {
               </Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Trip Info Card */}
-        <View style={styles.card}>
+        <Animated.View
+          style={[
+            styles.card,
+            { borderLeftColor: getStatusColor(trip.statut) },
+            {
+              opacity: card1Anim,
+              transform: [
+                {
+                  translateY: card1Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <View style={styles.cardHeader}>
             <View
               style={[
@@ -316,10 +380,26 @@ export const TripHistoryDetailScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Locations Card */}
-        <View style={styles.card}>
+        <Animated.View
+          style={[
+            styles.card,
+            { borderLeftColor: colors.primary },
+            {
+              opacity: card2Anim,
+              transform: [
+                {
+                  translateY: card2Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <View style={styles.cardHeader}>
             <View
               style={[
@@ -449,10 +529,26 @@ export const TripHistoryDetailScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Driver Card */}
-        <View style={styles.card}>
+        <Animated.View
+          style={[
+            styles.card,
+            { borderLeftColor: colors.primary },
+            {
+              opacity: card3Anim,
+              transform: [
+                {
+                  translateY: card3Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <View style={styles.cardHeader}>
             <View
               style={[
@@ -505,10 +601,26 @@ export const TripHistoryDetailScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Vehicle Card */}
-        <View style={styles.card}>
+        <Animated.View
+          style={[
+            styles.card,
+            { borderLeftColor: colors.primary },
+            {
+              opacity: card4Anim,
+              transform: [
+                {
+                  translateY: card4Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <View style={styles.cardHeader}>
             <View
               style={[
@@ -572,11 +684,27 @@ export const TripHistoryDetailScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Notes Card */}
         <ConditionalComponent isValid={!!trip.notes}>
-          <View style={styles.card}>
+          <Animated.View
+            style={[
+              styles.card,
+              { borderLeftColor: colors.primary },
+              {
+                opacity: card5Anim,
+                transform: [
+                  {
+                    translateY: card5Anim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
             <View style={styles.cardHeader}>
               <View
                 style={[
@@ -596,7 +724,7 @@ export const TripHistoryDetailScreen: React.FC = () => {
                 {trip.notes}
               </Text>
             </View>
-          </View>
+          </Animated.View>
         </ConditionalComponent>
 
         <View style={styles.bottomSpacer} />

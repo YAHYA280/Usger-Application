@@ -187,4 +187,88 @@ export const createStyles = (colors: ThemeColors) =>
       fontSize: 14,
       textAlign: "center",
     },
+    skeletonCard: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 12,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      borderLeftWidth: 4,
+      borderLeftColor: colors.border,
+      minHeight: 110,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: colors.isDark ? 0.3 : 0.08,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 3,
+        },
+        web: {
+          boxShadow: colors.isDark
+            ? "0 2px 4px rgba(0, 0, 0, 0.3)"
+            : "0 2px 4px rgba(0, 0, 0, 0.08)",
+        },
+      }),
+    },
+    skeletonIconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+      backgroundColor: colors.isDark
+        ? "rgba(255, 255, 255, 0.1)"
+        : "rgba(0, 0, 0, 0.05)",
+      marginRight: 12,
+    },
+    skeletonContent: {
+      flex: 1,
+      gap: 8,
+    },
+    skeletonHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 4,
+    },
+    skeletonTitle: {
+      width: "50%",
+      height: 18,
+      borderRadius: 4,
+      backgroundColor: colors.isDark
+        ? "rgba(255, 255, 255, 0.1)"
+        : "rgba(0, 0, 0, 0.05)",
+    },
+    skeletonBadge: {
+      width: 60,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.isDark
+        ? "rgba(255, 255, 255, 0.1)"
+        : "rgba(0, 0, 0, 0.05)",
+    },
+    skeletonLine: {
+      width: "100%",
+      height: 14,
+      borderRadius: 4,
+      backgroundColor: colors.isDark
+        ? "rgba(255, 255, 255, 0.1)"
+        : "rgba(0, 0, 0, 0.05)",
+      marginBottom: 6,
+    },
+    skeletonFooter: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 4,
+    },
+    skeletonSmallLine: {
+      width: "40%",
+      height: 14,
+      borderRadius: 4,
+      backgroundColor: colors.isDark
+        ? "rgba(255, 255, 255, 0.1)"
+        : "rgba(0, 0, 0, 0.05)",
+    },
   });
