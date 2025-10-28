@@ -59,6 +59,20 @@ export const TripHistoryDetailScreen: React.FC = () => {
     }
   };
 
+  const getIconBackgroundColor = (status: TripStatus | string) => {
+    switch (status) {
+      case "Termine":
+      case "Terminé":
+        return colors.success + "20";
+      case "Annule":
+        return colors.error + "20";
+      case "Problematique":
+        return colors.warning + "20";
+      default:
+        return colors.textSecondary + "20";
+    }
+  };
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("fr-FR", {
       day: "2-digit",
@@ -100,12 +114,57 @@ export const TripHistoryDetailScreen: React.FC = () => {
           }}
           title="Détails du trajet"
         />
-        <View style={styles.loadingContainer}>
-          <Ionicons name="hourglass" size={48} color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-            Chargement...
-          </Text>
-        </View>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Skeleton Loading Cards */}
+          <View style={styles.skeletonCard}>
+            <View style={styles.skeletonHeader}>
+              <View style={styles.skeletonIcon} />
+              <View style={styles.skeletonTitle} />
+            </View>
+            <View style={styles.skeletonContent}>
+              <View style={styles.skeletonLine} />
+              <View style={styles.skeletonLine} />
+              <View style={styles.skeletonLine} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonCard}>
+            <View style={styles.skeletonHeader}>
+              <View style={styles.skeletonIcon} />
+              <View style={styles.skeletonTitle} />
+            </View>
+            <View style={styles.skeletonContent}>
+              <View style={styles.skeletonLine} />
+              <View style={styles.skeletonLine} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonCard}>
+            <View style={styles.skeletonHeader}>
+              <View style={styles.skeletonIcon} />
+              <View style={styles.skeletonTitle} />
+            </View>
+            <View style={styles.skeletonContent}>
+              <View style={styles.skeletonLine} />
+              <View style={styles.skeletonLine} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonCard}>
+            <View style={styles.skeletonHeader}>
+              <View style={styles.skeletonIcon} />
+              <View style={styles.skeletonTitle} />
+            </View>
+            <View style={styles.skeletonContent}>
+              <View style={styles.skeletonLine} />
+              <View style={styles.skeletonLine} />
+            </View>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -120,7 +179,11 @@ export const TripHistoryDetailScreen: React.FC = () => {
         title="Détails du trajet"
       />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Status Section */}
         <View style={styles.statusSection}>
           <View style={styles.statusHeader}>
@@ -145,11 +208,18 @@ export const TripHistoryDetailScreen: React.FC = () => {
         {/* Trip Info Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons
-              name="information-circle"
-              size={24}
-              color={colors.primary}
-            />
+            <View
+              style={[
+                styles.cardIconContainer,
+                { backgroundColor: getIconBackgroundColor(trip.statut) },
+              ]}
+            >
+              <Ionicons
+                name="information-circle"
+                size={24}
+                color={getStatusColor(trip.statut)}
+              />
+            </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               Informations du trajet
             </Text>
@@ -251,7 +321,14 @@ export const TripHistoryDetailScreen: React.FC = () => {
         {/* Locations Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="navigate" size={24} color={colors.primary} />
+            <View
+              style={[
+                styles.cardIconContainer,
+                { backgroundColor: colors.primary + "20" },
+              ]}
+            >
+              <Ionicons name="navigate" size={24} color={colors.primary} />
+            </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               Itinéraire
             </Text>
@@ -377,7 +454,14 @@ export const TripHistoryDetailScreen: React.FC = () => {
         {/* Driver Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="person" size={24} color={colors.primary} />
+            <View
+              style={[
+                styles.cardIconContainer,
+                { backgroundColor: colors.primary + "20" },
+              ]}
+            >
+              <Ionicons name="person" size={24} color={colors.primary} />
+            </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               Chauffeur
             </Text>
@@ -426,7 +510,14 @@ export const TripHistoryDetailScreen: React.FC = () => {
         {/* Vehicle Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="car-sport" size={24} color={colors.primary} />
+            <View
+              style={[
+                styles.cardIconContainer,
+                { backgroundColor: colors.primary + "20" },
+              ]}
+            >
+              <Ionicons name="car-sport" size={24} color={colors.primary} />
+            </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               Véhicule
             </Text>
@@ -487,7 +578,14 @@ export const TripHistoryDetailScreen: React.FC = () => {
         <ConditionalComponent isValid={!!trip.notes}>
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Ionicons name="document-text" size={24} color={colors.primary} />
+              <View
+                style={[
+                  styles.cardIconContainer,
+                  { backgroundColor: colors.primary + "20" },
+                ]}
+              >
+                <Ionicons name="document-text" size={24} color={colors.primary} />
+              </View>
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 Notes et commentaires
               </Text>

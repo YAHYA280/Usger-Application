@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
 import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { Header } from "../../../shared/components/ui/Header";
-import { Input } from "../../../shared/components/ui/Input";
+import { SearchModal } from "../../../shared/components/ui/SearchModal";
 import { Sidebar } from "../../../shared/components/ui/Sidebar";
 import { TrackingTrip, TripStatus } from "../../../shared/types/tracking";
 import { useTrackingStore } from "../../../store/trackingStore";
@@ -19,9 +19,9 @@ export const TripHistoryScreen: React.FC = () => {
   const styles = createStyles(colors);
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("all");
-  const [dateFilter, setDateFilter] = useState<"all" | "week" | "month">("all");
 
   const { trips, fetchTrips, isLoading } = useTrackingStore();
 
@@ -93,19 +93,21 @@ export const TripHistoryScreen: React.FC = () => {
       );
     }
 
-    // Filter by date
-    const now = new Date();
-    if (dateFilter === "week") {
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter((trip) => trip.heureDepart >= weekAgo);
-    } else if (dateFilter === "month") {
-      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter((trip) => trip.heureDepart >= monthAgo);
-    }
-
     return filtered.sort(
       (a, b) => b.heureDepart.getTime() - a.heureDepart.getTime()
     );
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleSearchPress = () => {
+    setShowSearchModal(true);
+  };
+
+  const handleCloseSearch = () => {
+    setShowSearchModal(false);
   };
 
   const getStatusColor = (status: TripStatus | string) => {
@@ -151,20 +153,45 @@ export const TripHistoryScreen: React.FC = () => {
     });
   };
 
+  const getIconBackgroundColor = (status: TripStatus | string) => {
+    switch (status) {
+      case "Termine":
+      case "Terminé":
+        return colors.success + "20";
+      case "Annule":
+        return colors.error + "20";
+      case "Problematique":
+        return colors.warning + "20";
+      default:
+        return colors.textSecondary + "20";
+    }
+  };
+
   const renderTripCard = ({ item }: { item: TrackingTrip }) => (
     <TouchableOpacity
-      style={styles.tripCard}
+      style={[
+        styles.tripCard,
+        { borderLeftColor: getStatusColor(item.statut) },
+      ]}
       onPress={() => router.push(`/tracking/history/${item.id}` as any)}
       activeOpacity={0.7}
     >
-      <View style={styles.tripCardHeader}>
-        <View style={styles.tripCardHeaderLeft}>
-          <Ionicons
-            name={getStatusIcon(item.statut) as any}
-            size={24}
-            color={getStatusColor(item.statut)}
-          />
-          <View style={styles.tripCardHeaderText}>
+      <View
+        style={[
+          styles.tripCardIconContainer,
+          { backgroundColor: getIconBackgroundColor(item.statut) },
+        ]}
+      >
+        <Ionicons
+          name={getStatusIcon(item.statut) as any}
+          size={28}
+          color={getStatusColor(item.statut)}
+        />
+      </View>
+
+      <View style={styles.tripCardContent}>
+        <View style={styles.tripCardHeader}>
+          <View style={styles.tripCardHeaderLeft}>
             <Text style={[styles.tripDate, { color: colors.text }]}>
               {formatDate(item.heureDepart)}
             </Text>
@@ -172,75 +199,72 @@ export const TripHistoryScreen: React.FC = () => {
               {formatTime(item.heureDepart)}
             </Text>
           </View>
-        </View>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: getStatusColor(item.statut) + "20" },
-          ]}
-        >
-          <Text
-            style={[styles.statusText, { color: getStatusColor(item.statut) }]}
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(item.statut) + "20" },
+            ]}
           >
-            {item.statut}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.tripCardBody}>
-        <View style={styles.locationRow}>
-          <View style={styles.locationIconContainer}>
-            <Ionicons name="arrow-up-circle" size={20} color={colors.primary} />
+            <Text
+              style={[
+                styles.statusText,
+                { color: getStatusColor(item.statut) },
+              ]}
+            >
+              {item.statut}
+            </Text>
           </View>
-          <Text
-            style={[styles.locationText, { color: colors.text }]}
-            numberOfLines={1}
-          >
-            {item.pointDepart.address}
-          </Text>
         </View>
 
-        <View style={styles.locationDivider}>
-          <View
-            style={[styles.dividerDot, { backgroundColor: colors.border }]}
-          />
-          <View
-            style={[styles.dividerDot, { backgroundColor: colors.border }]}
-          />
-          <View
-            style={[styles.dividerDot, { backgroundColor: colors.border }]}
-          />
-        </View>
-
-        <View style={styles.locationRow}>
-          <View style={styles.locationIconContainer}>
-            <Ionicons name="location" size={20} color={colors.error} />
+        <View style={styles.tripCardBody}>
+          <View style={styles.locationRow}>
+            <View style={styles.locationIconContainer}>
+              <Ionicons
+                name="arrow-up-circle"
+                size={20}
+                color={colors.primary}
+              />
+            </View>
+            <Text
+              style={[styles.locationText, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {item.pointDepart.address}
+            </Text>
           </View>
-          <Text
-            style={[styles.locationText, { color: colors.text }]}
-            numberOfLines={1}
-          >
-            {item.pointArrivee.address}
-          </Text>
-        </View>
-      </View>
 
-      <View style={styles.tripCardFooter}>
-        <View style={styles.driverInfo}>
-          <Ionicons
-            name="person-circle"
-            size={16}
-            color={colors.textSecondary}
-          />
-          <Text style={[styles.driverName, { color: colors.textSecondary }]}>
-            {item.chauffeur.prenom} {item.chauffeur.nom}
-          </Text>
+          <View style={styles.locationRow}>
+            <View style={styles.locationIconContainer}>
+              <Ionicons name="location" size={20} color={colors.error} />
+            </View>
+            <Text
+              style={[styles.locationText, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {item.pointArrivee.address}
+            </Text>
+          </View>
         </View>
-        <View style={styles.distanceInfo}>
-          <Ionicons name="car" size={16} color={colors.textSecondary} />
-          <Text style={[styles.distanceText, { color: colors.textSecondary }]}>
-            {item.distance.toFixed(1)} km
-          </Text>
+
+        <View style={styles.tripCardFooter}>
+          <View style={styles.driverInfo}>
+            <Ionicons
+              name="person-circle"
+              size={16}
+              color={colors.textSecondary}
+            />
+            <Text style={[styles.driverName, { color: colors.textSecondary }]}>
+              {item.chauffeur.prenom} {item.chauffeur.nom}
+            </Text>
+          </View>
+          <View style={styles.distanceInfo}>
+            <Ionicons name="car" size={16} color={colors.textSecondary} />
+            <Text
+              style={[styles.distanceText, { color: colors.textSecondary }]}
+            >
+              {item.distance.toFixed(1)} km
+            </Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -295,118 +319,32 @@ export const TripHistoryScreen: React.FC = () => {
           onPress: handleOpenSidebar,
         }}
         title="Historique des trajets"
+        rightIcons={[
+          {
+            icon: "search",
+            onPress: handleSearchPress,
+          },
+        ]}
       />
 
       <View style={styles.content}>
-        <View style={styles.searchSection}>
-          <Input
-            placeholder="Rechercher un trajet..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            rightIcon="search"
-          />
-        </View>
-
         <View style={styles.filterSection}>
           <View style={styles.filterRow}>
             {renderFilterButton("Tous", "all", "list")}
             {renderFilterButton("Réalisés", "Termine", "checkmark-circle")}
             {renderFilterButton("Annulés", "Annule", "close-circle")}
           </View>
-
-          <View style={styles.dateFilterRow}>
-            <TouchableOpacity
-              style={[
-                styles.dateFilterButton,
-                {
-                  backgroundColor:
-                    dateFilter === "all"
-                      ? colors.primary + "20"
-                      : colors.backgroundSecondary,
-                  borderColor:
-                    dateFilter === "all" ? colors.primary : colors.border,
-                },
-              ]}
-              onPress={() => setDateFilter("all")}
-            >
-              <Text
-                style={[
-                  styles.dateFilterText,
-                  {
-                    color:
-                      dateFilter === "all"
-                        ? colors.primary
-                        : colors.textSecondary,
-                  },
-                ]}
-              >
-                Tout
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.dateFilterButton,
-                {
-                  backgroundColor:
-                    dateFilter === "week"
-                      ? colors.primary + "20"
-                      : colors.backgroundSecondary,
-                  borderColor:
-                    dateFilter === "week" ? colors.primary : colors.border,
-                },
-              ]}
-              onPress={() => setDateFilter("week")}
-            >
-              <Text
-                style={[
-                  styles.dateFilterText,
-                  {
-                    color:
-                      dateFilter === "week"
-                        ? colors.primary
-                        : colors.textSecondary,
-                  },
-                ]}
-              >
-                7 jours
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.dateFilterButton,
-                {
-                  backgroundColor:
-                    dateFilter === "month"
-                      ? colors.primary + "20"
-                      : colors.backgroundSecondary,
-                  borderColor:
-                    dateFilter === "month" ? colors.primary : colors.border,
-                },
-              ]}
-              onPress={() => setDateFilter("month")}
-            >
-              <Text
-                style={[
-                  styles.dateFilterText,
-                  {
-                    color:
-                      dateFilter === "month"
-                        ? colors.primary
-                        : colors.textSecondary,
-                  },
-                ]}
-              >
-                30 jours
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
-        <ConditionalComponent
-          isValid={filteredTrips.length > 0}
-          defaultComponent={
+        <FlatList
+          data={filteredTrips}
+          renderItem={renderTripCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={
+            filteredTrips.length === 0 ? { flex: 1 } : styles.listContainer
+          }
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons
                 name="folder-open-outline"
@@ -422,16 +360,18 @@ export const TripHistoryScreen: React.FC = () => {
               </Text>
             </View>
           }
-        >
-          <FlatList
-            data={filteredTrips}
-            renderItem={renderTripCard}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          />
-        </ConditionalComponent>
+          ItemSeparatorComponent={() => <View style={{ height: 4 }} />}
+        />
       </View>
+
+      <SearchModal
+        visible={showSearchModal}
+        onClose={handleCloseSearch}
+        onSearch={handleSearch}
+        placeholder="Rechercher un trajet..."
+        title="Rechercher"
+        initialQuery={searchQuery}
+      />
 
       <Sidebar
         visible={isSidebarVisible}

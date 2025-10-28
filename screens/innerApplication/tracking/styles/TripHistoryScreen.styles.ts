@@ -28,13 +28,10 @@ export const createStyles = (colors: ThemeColors) =>
     filterSection: {
       padding: 16,
       backgroundColor: colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
     },
     filterRow: {
       flexDirection: "row",
       gap: 8,
-      marginBottom: 12,
     },
     filterButton: {
       flexDirection: "row",
@@ -66,59 +63,74 @@ export const createStyles = (colors: ThemeColors) =>
       fontWeight: "600",
     },
     listContainer: {
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 100,
     },
     tripCard: {
       backgroundColor: colors.card,
       borderRadius: 12,
-      padding: 16,
+      padding: 20,
       marginBottom: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      borderLeftWidth: 4,
+      minHeight: 110,
       ...Platform.select({
         ios: {
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: colors.isDark ? 0.3 : 0.08,
           shadowRadius: 4,
         },
         android: {
-          elevation: 2,
+          elevation: 3,
+        },
+        web: {
+          boxShadow: colors.isDark
+            ? "0 2px 4px rgba(0, 0, 0, 0.3)"
+            : "0 2px 4px rgba(0, 0, 0, 0.08)",
         },
       }),
+    },
+    tripCardIconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+    },
+    tripCardContent: {
+      flex: 1,
     },
     tripCardHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 16,
+      alignItems: "flex-start",
+      marginBottom: 12,
     },
     tripCardHeaderLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-    },
-    tripCardHeaderText: {
       gap: 2,
     },
     tripDate: {
       fontSize: 16,
-      fontWeight: "600",
+      fontWeight: "700",
     },
     tripTime: {
-      fontSize: 13,
+      fontSize: 14,
     },
     statusBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
       borderRadius: 12,
     },
     statusText: {
-      fontSize: 12,
+      fontSize: 14,
       fontWeight: "600",
     },
     tripCardBody: {
-      marginBottom: 16,
+      marginBottom: 12,
     },
     locationRow: {
       flexDirection: "row",
@@ -134,23 +146,10 @@ export const createStyles = (colors: ThemeColors) =>
       fontSize: 14,
       fontWeight: "500",
     },
-    locationDivider: {
-      flexDirection: "column",
-      alignItems: "center",
-      paddingVertical: 4,
-      gap: 2,
-    },
-    dividerDot: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
-    },
     tripCardFooter: {
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
+      paddingTop: 8,
     },
     driverInfo: {
       flexDirection: "row",
