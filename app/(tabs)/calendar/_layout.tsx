@@ -10,6 +10,7 @@ export default function CalendarLayout() {
       <Stack.Screen name="agenda" options={{ headerShown: false }} />
       <Stack.Screen name="create-event" options={{ headerShown: false }} />
       <Stack.Screen name="search" options={{ headerShown: false }} />
+      <Stack.Screen name="timetable" options={{ headerShown: false }} />
     </Stack>
   );
 }

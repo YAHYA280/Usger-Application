@@ -1,3 +1,4 @@
+import { useTimetableStore } from "@/store/timetableStore";
 import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Platform, StyleSheet, View } from "react-native";
@@ -7,12 +8,16 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { Button } from "../../../shared/components/ui/Button";
 import { Header } from "../../../shared/components/ui/Header";
 import { useCalendarStore } from "../../../store/calendarStore";
+import { TimetableAccessCard } from "./components/TimetableAccessCard";
 
 export const CalendarScreen: React.FC = () => {
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const { events, fetchEvents } = useCalendarStore();
+  const { getCurrentSession } = useTimetableStore();
+  const currentSession = getCurrentSession();
+  const currentSessionCount = currentSession ? 1 : 0;
 
   const [selectedDate, setSelectedDate] = React.useState<string>(
     new Date().toISOString().split("T")[0]
@@ -185,6 +190,7 @@ export const CalendarScreen: React.FC = () => {
             variant="primary"
           />
         </View>
+        <TimetableAccessCard currentSessionCount={currentSessionCount} />
       </Animated.View>
     </SafeAreaView>
   );
