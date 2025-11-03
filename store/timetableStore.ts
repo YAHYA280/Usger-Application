@@ -1,6 +1,15 @@
 // store/timetableStore.ts
 import { create } from "zustand";
 import {
+  addDays,
+  format,
+  getDay,
+  getWeek,
+  startOfWeek,
+  parseISO,
+} from "date-fns";
+import { fr } from "date-fns/locale";
+import {
   ClassSession,
   DayOfWeek,
   Teacher,
@@ -11,46 +20,43 @@ import {
 
 type TimetableStore = TimetableState & TimetableActions;
 
-// Helper function to get current week number
-const getWeekNumber = (date: Date): number => {
-  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-  const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-};
-
-// Helper function to get week dates
+// Helper function to get week dates using date-fns
 const getWeekDates = (weekOffset: number = 0) => {
   const today = new Date();
-  const currentDay = today.getDay();
-  const diff = currentDay === 0 ? -6 : 1 - currentDay; // Adjust to Monday
 
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diff + weekOffset * 7);
-  monday.setHours(0, 0, 0, 0);
+  // Get the start of the week (Monday) for the current week
+  const monday = startOfWeek(today, { weekStartsOn: 1 });
 
-  const saturday = new Date(monday);
-  saturday.setDate(monday.getDate() + 5);
+  // Add the week offset
+  const targetMonday = addDays(monday, weekOffset * 7);
+
+  // Friday is 4 days after Monday
+  const friday = addDays(targetMonday, 4);
 
   return {
-    startDate: monday.toISOString().split("T")[0],
-    endDate: saturday.toISOString().split("T")[0],
-    weekNumber: getWeekNumber(monday),
+    startDate: format(targetMonday, "yyyy-MM-dd"),
+    endDate: format(friday, "yyyy-MM-dd"),
+    weekNumber: getWeek(targetMonday, { weekStartsOn: 1 }),
   };
 };
 
-// Helper function to format date to day name
+// Helper function to format date to day name using date-fns
 const getDayOfWeek = (dateString: string): DayOfWeek => {
-  const date = new Date(dateString);
+  const date = parseISO(dateString);
+  const dayIndex = getDay(date);
+
+  // JavaScript getDay(): 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
   const days: DayOfWeek[] = [
-    "lundi",
-    "mardi",
-    "mercredi",
-    "jeudi",
-    "vendredi",
-    "samedi",
+    "lundi",     // 0 - placeholder for Sunday (won't be used)
+    "lundi",     // 1 - Monday
+    "mardi",     // 2 - Tuesday
+    "mercredi",  // 3 - Wednesday
+    "jeudi",     // 4 - Thursday
+    "vendredi",  // 5 - Friday
+    "lundi",     // 6 - Saturday (placeholder, won't be used)
   ];
-  const dayIndex = date.getDay();
-  return days[dayIndex === 0 ? 6 : dayIndex - 1];
+
+  return days[dayIndex];
 };
 
 // Mock teachers data
@@ -124,25 +130,27 @@ const mockTeachers: Record<string, Teacher> = {
 const generateMockWeekSchedule = (weekOffset: number = 0): WeekSchedule => {
   const { startDate, endDate, weekNumber } = getWeekDates(weekOffset);
 
+  // Only Monday to Friday (5 days)
   const days: DayOfWeek[] = [
     "lundi",
     "mardi",
     "mercredi",
     "jeudi",
     "vendredi",
-    "samedi",
   ];
 
-  const monday = new Date(startDate);
+  const monday = parseISO(startDate);
 
   const weekSchedule: WeekSchedule = {
     weekNumber,
     startDate,
     endDate,
     days: days.map((day, index) => {
-      const currentDate = new Date(monday);
-      currentDate.setDate(monday.getDate() + index);
-      const dateString = currentDate.toISOString().split("T")[0];
+      const currentDate = addDays(monday, index);
+      const dateString = format(currentDate, "yyyy-MM-dd");
+
+      // Get the actual day of week from the date to ensure consistency
+      const actualDay = getDayOfWeek(dateString);
 
       let sessions: ClassSession[] = [];
 
@@ -421,13 +429,8 @@ const generateMockWeekSchedule = (weekOffset: number = 0): WeekSchedule => {
         ];
       }
 
-      // Saturday schedule (no classes - empty)
-      if (day === "samedi") {
-        sessions = [];
-      }
-
       return {
-        day,
+        day: actualDay,
         date: dateString,
         sessions,
       };

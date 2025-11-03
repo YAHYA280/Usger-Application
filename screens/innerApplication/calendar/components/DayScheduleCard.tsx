@@ -39,16 +39,16 @@ const createStyles = (colors: any, isToday: boolean) =>
         ios: {
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: colors.isDark ? 0.3 : 0.1,
+          shadowOpacity: colors.isDark ? 0.35 : 0.15,
           shadowRadius: 8,
         },
         android: {
-          elevation: 6,
+          elevation: 8,
         },
         web: {
           boxShadow: colors.isDark
-            ? "0 4px 12px rgba(0, 0, 0, 0.3)"
-            : "0 4px 12px rgba(0, 0, 0, 0.08)",
+            ? "0 4px 12px rgba(0, 0, 0, 0.35)"
+            : "0 4px 12px rgba(0, 0, 0, 0.13)",
         },
       }),
     },
@@ -107,16 +107,16 @@ const createStyles = (colors: any, isToday: boolean) =>
         ios: {
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: colors.isDark ? 0.25 : 0.08,
+          shadowOpacity: colors.isDark ? 0.3 : 0.13,
           shadowRadius: 6,
         },
         android: {
-          elevation: 4,
+          elevation: 5,
         },
         web: {
           boxShadow: colors.isDark
-            ? "0 2px 6px rgba(0, 0, 0, 0.25)"
-            : "0 2px 6px rgba(0, 0, 0, 0.08)",
+            ? "0 2px 6px rgba(0, 0, 0, 0.3)"
+            : "0 2px 6px rgba(0, 0, 0, 0.13)",
         },
       }),
     },

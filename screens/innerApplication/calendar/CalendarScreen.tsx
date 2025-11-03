@@ -147,6 +147,7 @@ export const CalendarScreen: React.FC = () => {
     },
     buttonContainer: {
       paddingHorizontal: 0,
+      marginBottom: 16,
     },
   });
 

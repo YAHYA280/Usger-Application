@@ -18,8 +18,7 @@ export type DayOfWeek =
   | "mardi"
   | "mercredi"
   | "jeudi"
-  | "vendredi"
-  | "samedi";
+  | "vendredi";
 
 export interface Teacher {
   id: string;
@@ -109,7 +108,6 @@ export const DAY_LABELS: Record<DayOfWeek, string> = {
   mercredi: "Mercredi",
   jeudi: "Jeudi",
   vendredi: "Vendredi",
-  samedi: "Samedi",
 };
 
 // Short day labels
@@ -119,5 +117,4 @@ export const DAY_LABELS_SHORT: Record<DayOfWeek, string> = {
   mercredi: "Mer",
   jeudi: "Jeu",
   vendredi: "Ven",
-  samedi: "Sam",
 };
