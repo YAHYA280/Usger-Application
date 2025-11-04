@@ -64,6 +64,7 @@ export interface TimetableState {
 
 export interface TimetableActions {
   fetchWeekSchedule: (weekOffset?: number) => Promise<void>;
+  fetchWeekScheduleByNumber: (weekNumber: number) => Promise<void>;
   setSelectedDay: (day: DayOfWeek | null) => void;
   selectSession: (session: ClassSession | null) => void;
   getCurrentSession: () => ClassSession | null;

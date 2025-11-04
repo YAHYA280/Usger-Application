@@ -1,14 +1,14 @@
-// store/timetableStore.ts
-import { create } from "zustand";
 import {
   addDays,
+  addWeeks,
   format,
   getDay,
   getWeek,
-  startOfWeek,
   parseISO,
+  startOfWeek,
+  startOfYear,
 } from "date-fns";
-import { fr } from "date-fns/locale";
+import { create } from "zustand";
 import {
   ClassSession,
   DayOfWeek,
@@ -19,6 +19,9 @@ import {
 } from "../shared/types/timetable";
 
 type TimetableStore = TimetableState & TimetableActions;
+
+// School year configuration (weeks 1-36, typical school year)
+const SCHOOL_YEAR_WEEKS = 36;
 
 // Helper function to get week dates using date-fns
 const getWeekDates = (weekOffset: number = 0) => {
@@ -40,20 +43,58 @@ const getWeekDates = (weekOffset: number = 0) => {
   };
 };
 
+// Helper function to get week dates by week number (1-36)
+const getWeekDatesByNumber = (weekNumber: number) => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+
+  // Start from first week of January
+  const yearStart = startOfYear(new Date(currentYear, 0, 1));
+  const firstMonday = startOfWeek(yearStart, { weekStartsOn: 1 });
+
+  // Calculate target week
+  const targetMonday = addWeeks(firstMonday, weekNumber - 1);
+  const friday = addDays(targetMonday, 4);
+
+  return {
+    startDate: format(targetMonday, "yyyy-MM-dd"),
+    endDate: format(friday, "yyyy-MM-dd"),
+    weekNumber: weekNumber,
+  };
+};
+
+// Generate available school weeks (1-36)
+export const generateAvailableWeeks = () => {
+  const today = new Date();
+  const currentWeekNumber = getWeek(today, { weekStartsOn: 1 });
+
+  const weeks = [];
+  for (let i = 1; i <= SCHOOL_YEAR_WEEKS; i++) {
+    const weekDates = getWeekDatesByNumber(i);
+    weeks.push({
+      weekNumber: i,
+      startDate: weekDates.startDate,
+      endDate: weekDates.endDate,
+      isCurrent: i === currentWeekNumber,
+    });
+  }
+
+  return weeks;
+};
+
 // Helper function to format date to day name using date-fns
 const getDayOfWeek = (dateString: string): DayOfWeek => {
   const date = parseISO(dateString);
   const dayIndex = getDay(date);
 
-  // JavaScript getDay(): 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
   const days: DayOfWeek[] = [
-    "lundi",     // 0 - placeholder for Sunday (won't be used)
-    "lundi",     // 1 - Monday
-    "mardi",     // 2 - Tuesday
-    "mercredi",  // 3 - Wednesday
-    "jeudi",     // 4 - Thursday
-    "vendredi",  // 5 - Friday
-    "lundi",     // 6 - Saturday (placeholder, won't be used)
+    "lundi",
+    "lundi",
+    "mardi",
+    "mercredi",
+    "jeudi",
+    "vendredi",
+    "lundi",
   ];
 
   return days[dayIndex];
@@ -126,18 +167,29 @@ const mockTeachers: Record<string, Teacher> = {
   },
 };
 
-// Generate mock schedule for a week
+// Generate mock schedule for a week by offset
 const generateMockWeekSchedule = (weekOffset: number = 0): WeekSchedule => {
   const { startDate, endDate, weekNumber } = getWeekDates(weekOffset);
+  return generateWeekScheduleByDates(startDate, endDate, weekNumber);
+};
+
+// Generate mock schedule for a week by week number
+const generateMockWeekScheduleByNumber = (
+  weekNumber: number
+): WeekSchedule => {
+  const { startDate, endDate } = getWeekDatesByNumber(weekNumber);
+  return generateWeekScheduleByDates(startDate, endDate, weekNumber);
+};
+
+// Core function to generate schedule from dates
+const generateWeekScheduleByDates = (
+  startDate: string,
+  endDate: string,
+  weekNumber: number
+): WeekSchedule => {
 
   // Only Monday to Friday (5 days)
-  const days: DayOfWeek[] = [
-    "lundi",
-    "mardi",
-    "mercredi",
-    "jeudi",
-    "vendredi",
-  ];
+  const days: DayOfWeek[] = ["lundi", "mardi", "mercredi", "jeudi", "vendredi"];
 
   const monday = parseISO(startDate);
 
@@ -456,6 +508,26 @@ export const useTimetableStore = create<TimetableStore>((set, get) => ({
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       const weekSchedule = generateMockWeekSchedule(weekOffset);
+
+      set({
+        currentWeek: weekSchedule,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        error: "Erreur lors du chargement de l'emploi du temps",
+        isLoading: false,
+      });
+    }
+  },
+
+  fetchWeekScheduleByNumber: async (weekNumber: number) => {
+    set({ isLoading: true, error: null });
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const weekSchedule = generateMockWeekScheduleByNumber(weekNumber);
 
       set({
         currentWeek: weekSchedule,

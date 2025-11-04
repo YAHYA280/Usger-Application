@@ -13,14 +13,16 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getWeek } from "date-fns";
 import { useTheme } from "../../../contexts/ThemeContext";
 import ConditionalComponent from "../../../shared/components/conditionalComponent/conditionalComponent";
 import { Header } from "../../../shared/components/ui/Header";
 import { ClassSession } from "../../../shared/types/timetable";
-import { useTimetableStore } from "../../../store/timetableStore";
+import { generateAvailableWeeks, useTimetableStore } from "../../../store/timetableStore";
 import { DayScheduleCard } from "./components/DayScheduleCard";
 import { SessionDetailsModal } from "./components/SessionDetailsModal";
 import { WeekNavigator } from "./components/WeekNavigator";
+import { WeekSelectorModal } from "./components/WeekSelectorModal";
 
 const createStyles = (colors: any) =>
   StyleSheet.create({
@@ -172,6 +174,7 @@ export const TimetableScreen: React.FC = () => {
   const [weekOffset, setWeekOffset] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const [showWeekSelectorModal, setShowWeekSelectorModal] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const {
@@ -180,12 +183,15 @@ export const TimetableScreen: React.FC = () => {
     isLoading,
     error,
     fetchWeekSchedule,
+    fetchWeekScheduleByNumber,
     selectSession,
     getCurrentSession,
     clearError,
   } = useTimetableStore();
 
   const currentSession = getCurrentSession();
+  const availableWeeks = generateAvailableWeeks();
+  const currentWeekNumber = getWeek(new Date(), { weekStartsOn: 1 });
 
   useEffect(() => {
     fetchWeekSchedule(weekOffset);
@@ -217,6 +223,7 @@ export const TimetableScreen: React.FC = () => {
 
   const handleCurrentWeek = () => {
     setWeekOffset(0);
+    fetchWeekSchedule(0);
   };
 
   const handleSessionPress = (session: ClassSession) => {
@@ -227,6 +234,20 @@ export const TimetableScreen: React.FC = () => {
   const handleCloseModal = () => {
     setShowSessionModal(false);
     selectSession(null);
+  };
+
+  const handleOpenWeekSelector = () => {
+    setShowWeekSelectorModal(true);
+  };
+
+  const handleCloseWeekSelector = () => {
+    setShowWeekSelectorModal(false);
+  };
+
+  const handleSelectWeek = async (weekNumber: number) => {
+    await fetchWeekScheduleByNumber(weekNumber);
+    // Reset weekOffset since we're now using absolute week number
+    setWeekOffset(0);
   };
 
   const formatWeekDates = () => {
@@ -333,9 +354,7 @@ export const TimetableScreen: React.FC = () => {
             </View>
             <TouchableOpacity
               style={styles.viewToggleButton}
-              onPress={() => {
-                // Future: Toggle between week and day view
-              }}
+              onPress={handleOpenWeekSelector}
               activeOpacity={0.7}
             >
               <FontAwesome name="calendar" size={14} color={colors.primary} />
@@ -403,6 +422,15 @@ export const TimetableScreen: React.FC = () => {
         visible={showSessionModal}
         session={selectedSession}
         onClose={handleCloseModal}
+      />
+
+      {/* Week Selector Modal */}
+      <WeekSelectorModal
+        visible={showWeekSelectorModal}
+        currentWeekNumber={currentWeek?.weekNumber || currentWeekNumber}
+        availableWeeks={availableWeeks}
+        onSelectWeek={handleSelectWeek}
+        onClose={handleCloseWeekSelector}
       />
     </SafeAreaView>
   );
